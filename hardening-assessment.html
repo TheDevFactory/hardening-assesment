@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Hardening Readiness Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --puppet-purple: #4C00FF;
+    --puppet-purple-dark: #3A00CC;
+    --puppet-purple-light: #6B33FF;
+    --puppet-amber: #FFAA1A;
+    --puppet-amber-dark: #E89500;
+    --navy: #ffffff;
+    --navy2: #f7f8fa;
+    --navy3: #f0f2f5;
+    --panel: #ffffff;
+    --border: #e0e4ea;
+    --accent: #4C00FF;
+    --accent2: #3A00CC;
+    --green: #00a870;
+    --amber: #FFAA1A;
+    --red: #d4351c;
+    --text: #222222;
+    --muted: #6b7280;
+    --label: #374151;
+    --bg-light: #f7f8fa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-light);
+    color: var(--text);
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle top accent bar — Puppet branding */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--puppet-purple), var(--puppet-purple-light), var(--puppet-amber));
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(76,0,255,0.06);
+    border: 1px solid rgba(76,0,255,0.2);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .header-badge::before {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  h1 {
+    font-size: clamp(26px, 5vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: #222222;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .header-sub {
+    margin-top: 10px;
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 520px;
+    margin-left: auto; margin-right: auto;
+    line-height: 1.5;
+  }
+
+  .header-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .header-meta-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .header-meta-item strong {
+    color: var(--label);
+    font-weight: 500;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .progress-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--puppet-purple-dark), var(--puppet-purple));
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Question card */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 36px;
+    animation: fadeUp 0.4s ease both;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .q-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .q-text {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #222222;
+    margin-bottom: 28px;
+  }
+
+  .q-hint {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: -18px;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  /* Options */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: #f7f8fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+  }
+
+  .option:hover {
+    border-color: rgba(76,0,255,0.35);
+    background: rgba(76,0,255,0.03);
+  }
+
+  .option.selected {
+    border-color: var(--accent);
+    background: rgba(76,0,255,0.06);
+  }
+
+  .option-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .option.selected .option-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .option.selected .option-dot::after {
+    content: '';
+    width: 6px; height: 6px;
+    background: #ffffff;
+    border-radius: 50%;
+  }
+
+  .option-text {
+    font-size: 15px;
+    color: var(--label);
+    transition: color 0.18s;
+  }
+
+  .option.selected .option-text {
+    color: #222222;
+    font-weight: 600;
+  }
+
+  /* Nav buttons */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 6px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  .btn-primary:hover { background: var(--puppet-purple-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76,0,255,0.3); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { color: var(--label); border-color: var(--muted); }
+
+  .btn-green {
+    background: var(--green);
+    color: #ffffff;
+  }
+
+  .btn-green:hover { background: #008f5e; transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .btn-outline:hover { background: rgba(76,0,255,0.06); }
+
+  /* ========= RESULTS ========= */
+  #results-section { display: none; animation: fadeUp 0.5s ease both; }
+
+  .results-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .score-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .score-ring {
+    position: relative;
+    width: 160px; height: 160px;
+  }
+
+  .score-ring svg {
+    transform: rotate(-90deg);
+    width: 160px; height: 160px;
+  }
+
+  .score-ring circle {
+    fill: none;
+    stroke-width: 8;
+  }
+
+  .score-ring .track { stroke: var(--border); }
+  .score-ring .fill {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-dasharray: 440;
+    stroke-dashoffset: 440;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1) 0.3s;
+  }
+
+  .score-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 42px;
+    font-weight: 600;
+    color: #222222;
+    line-height: 1;
+  }
+
+  .score-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+  }
+
+  .score-band {
+    margin-top: 14px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .score-band-desc {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    max-width: 440px;
+  }
+
+  /* Layer scores */
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--puppet-purple);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .layers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .layer-card {
+    background: #f7f8fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+
+  .layer-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--label);
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .layer-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .layer-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease 0.5s;
+  }
+
+  .layer-score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .layer-score-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: #222222;
+  }
+
+  .layer-score-grade {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+
+  .grade-high { background: rgba(0,168,112,0.1); color: #007a52; }
+  .grade-mid  { background: rgba(255,170,26,0.12); color: #b37400; }
+  .grade-low  { background: rgba(212,53,28,0.1); color: #c62d17; }
+
+  /* Indicators row */
+  .indicators-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .indicator-card {
+    background: #f7f8fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+  }
+
+  .indicator-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .indicator-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .indicator-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Gaps */
+  .gaps-list {
+    list-style: none;
+    margin-bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .gap-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--red);
+  }
+
+  .gap-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .gap-text {
+    font-size: 14px;
+    color: var(--label);
+    line-height: 1.5;
+  }
+
+  /* Quick wins */
+  .wins-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .win-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--green);
+  }
+
+  .win-icon {
+    color: var(--green);
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .win-text {
+    font-size: 14px;
+    color: var(--label);
+    line-height: 1.5;
+  }
+
+  /* CTA box */
+  .cta-box {
+    background: linear-gradient(135deg, rgba(76,0,255,0.04), rgba(76,0,255,0.02));
+    border: 1px solid rgba(76,0,255,0.2);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .cta-box-text { flex: 1; min-width: 200px; }
+  .cta-box-title { font-size: 17px; font-weight: 600; color: #222222; margin-bottom: 6px; }
+  .cta-box-sub { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+  /* Email modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px;
+    max-width: 440px;
+    width: 90%;
+    animation: scaleIn 0.25s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+
+  .modal h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #222222;
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 22px;
+    line-height: 1.6;
+  }
+
+  .input-group { margin-bottom: 16px; }
+
+  .input-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  input[type="text"], input[type="email"] {
+    width: 100%;
+    background: #f7f8fa;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(76,0,255,0.1); }
+  input::placeholder { color: #9ca3af; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 32px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #222222;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  @media (max-width: 560px) {
+    .indicators-row { grid-template-columns: 1fr; }
+    .card { padding: 24px 20px; }
+    .cta-box { padding: 20px; }
+  }
+
+  .hidden { display: none !important; }
+
+  /* ===== PUPPET RECOMMENDATIONS ===== */
+  .puppet-section {
+    margin-bottom: 20px;
+  }
+
+  .puppet-intro {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 18px;
+    padding: 12px 16px;
+    background: rgba(76,0,255,0.03);
+    border-left: 3px solid var(--puppet-purple);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .puppet-rec {
+    background: #f7f8fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .puppet-rec-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px 14px;
+  }
+
+  .puppet-rec-icon {
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    background: rgba(76,0,255,0.06);
+    border: 1px solid rgba(76,0,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .puppet-rec-body { flex: 1; }
+
+  .puppet-rec-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222222;
+    margin-bottom: 5px;
+  }
+
+  .puppet-rec-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 10px;
+  }
+
+  .puppet-caps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .puppet-cap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border: 1px solid;
+  }
+
+  .puppet-cap.cap-core {
+    background: rgba(255,170,26,0.08);
+    border-color: rgba(255,170,26,0.3);
+    color: #b37400;
+  }
+
+  .puppet-cap.cap-module {
+    background: rgba(76,0,255,0.05);
+    border-color: rgba(76,0,255,0.2);
+    color: var(--puppet-purple);
+  }
+
+  .puppet-cap.cap-enterprise {
+    background: rgba(0,168,112,0.06);
+    border-color: rgba(0,168,112,0.25);
+    color: #007a52;
+  }
+
+  .puppet-cap-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .puppet-legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+
+  /* ===== FLOATING DOWNLOAD BAR ===== */
+  .dl-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 50;
+    background: #ffffff;
+    border-top: 1px solid var(--border);
+    padding: 14px 24px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  }
+
+  .dl-bar.visible { display: flex; }
+
+  .dl-bar-text {
+    font-size: 14px;
+    color: var(--label);
+  }
+
+  .dl-bar-text strong { color: #222222; }
+
+  .dl-bar-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 24px;
+    background: var(--puppet-purple);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-dl:hover { background: var(--puppet-purple-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76,0,255,0.3); }
+  .btn-dl:disabled { opacity: 0.6; cursor: wait; }
+
+  .btn-dl svg { flex-shrink: 0; }
+
+  /* PDF generation overlay */
+  .pdf-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(255,255,255,0.9);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 18px;
+    backdrop-filter: blur(6px);
+  }
+
+  .pdf-overlay.active { display: flex; }
+
+  .pdf-spinner {
+    width: 44px; height: 44px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .pdf-overlay-text {
+    font-size: 15px;
+    color: var(--label);
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">System Security Assessment</div>
+    <h1>System Hardening<br><span>Readiness Assessment</span></h1>
+    <p class="header-sub">Evaluate your configuration baseline practices against CIS Benchmark and DISA STIG alignment principles — no certification claims, just honest signal.</p>
+    <div class="header-meta">
+      <span class="header-meta-item">⏱ <strong>3–5 min</strong> · 10 questions</span>
+      <span class="header-meta-item">📋 Instant scorecard</span>
+      <span class="header-meta-item">🔒 No data stored</span>
+    </div>
+  </div>
+
+  <!-- ASSESSMENT SECTION -->
+  <div id="assessment-section">
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="progress-label">Assessment progress</span>
+        <span class="progress-count" id="prog-count">0 / 10</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="card" id="question-card">
+      <div class="q-number" id="q-number">Question 1 of 10</div>
+      <div class="q-text" id="q-text"></div>
+      <div class="q-hint" id="q-hint"></div>
+      <div class="options" id="options-list"></div>
+      <div class="nav">
+        <button class="btn btn-ghost" id="btn-back" onclick="goBack()">← Back</button>
+        <button class="btn btn-primary" id="btn-next" onclick="goNext()" disabled>Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS SECTION -->
+  <div id="results-section">
+    <div class="results-header">
+      <div class="header-badge">Your Scorecard</div>
+      <h1>Hardening Readiness<br><span>Report</span></h1>
+    </div>
+
+    <!-- Overall score -->
+    <div class="card" style="margin-bottom:20px; text-align:center; padding-bottom: 32px;">
+      <div class="section-title" style="text-align:left">Overall Readiness Score</div>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg viewBox="0 0 160 160">
+            <circle class="track" cx="80" cy="80" r="70"/>
+            <circle class="fill" id="ring-fill" cx="80" cy="80" r="70"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-num" id="score-num">0</div>
+            <div class="score-label">/ 100</div>
+          </div>
+        </div>
+        <div class="score-band" id="score-band">—</div>
+        <div class="score-band-desc" id="score-band-desc"></div>
+      </div>
+    </div>
+
+    <!-- Layer scores -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-title">Layer Scores</div>
+      <div class="layers-grid" id="layers-grid"></div>
+    </div>
+
+    <!-- Indicators -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-title">Exposure Indicators</div>
+      <div class="indicators-row">
+        <div class="indicator-card">
+          <div class="indicator-label">Drift Exposure</div>
+          <div class="indicator-value" id="drift-val">—</div>
+          <div class="indicator-sub" id="drift-sub"></div>
+        </div>
+        <div class="indicator-card">
+          <div class="indicator-label">Evidence Readiness</div>
+          <div class="indicator-value" id="evidence-val">—</div>
+          <div class="indicator-sub" id="evidence-sub"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gaps -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-title">Top 5 Prioritized Gaps</div>
+      <ul class="gaps-list" id="gaps-list"></ul>
+    </div>
+
+    <!-- Quick wins -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-title">Most Likely Quick Wins · 14 Days</div>
+      <ul class="wins-list" id="wins-list"></ul>
+    </div>
+
+    <!-- Puppet Recommendations -->
+    <div class="card puppet-section" id="puppet-section" style="margin-bottom:20px;">
+      <div class="section-title">Puppet Capability Recommendations</div>
+      <div class="puppet-intro">
+        Based on your responses, the following Puppet capabilities are specifically suited to close your identified gaps. Recommendations are mapped to the control areas where your score indicates the greatest improvement potential.
+      </div>
+      <div id="puppet-recs-list"></div>
+      <div class="puppet-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#FFAA1A"></div>Puppet Core / Open Source</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4C00FF"></div>Puppet Forge Module</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00a870"></div>Puppet Enterprise Feature</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <div class="cta-box-text">
+        <div class="cta-box-title">📅 Scorecard Review — No commitment required</div>
+        <div class="cta-box-sub">A 30-minute session with an engineer to walk through your results, prioritize gaps, and map a realistic remediation path. Free, no obligation.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openSchedule()">Book a Review →</button>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; padding-bottom: 80px;">
+      <button class="btn btn-ghost" onclick="restartAssessment()">↺ Retake Assessment</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- FLOATING DOWNLOAD BAR -->
+<div class="dl-bar" id="dl-bar">
+  <div class="dl-bar-text"><strong>Your scorecard is ready.</strong> Download a full PDF to share with your team or bring to a review.</div>
+  <div class="dl-bar-actions">
+    <button class="btn-dl" id="dl-btn" onclick="downloadPDF()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Download PDF Scorecard
+    </button>
+    <button class="btn btn-primary" onclick="openSchedule()" style="padding:11px 20px;">Book a Review →</button>
+  </div>
+</div>
+
+<!-- PDF GENERATION OVERLAY -->
+<div class="pdf-overlay" id="pdf-overlay">
+  <div class="pdf-spinner"></div>
+  <div class="pdf-overlay-text" id="pdf-overlay-text">Building your scorecard…</div>
+</div>
+
+<!-- SCHEDULE MODAL -->
+<div class="modal-overlay" id="schedule-modal">
+  <div class="modal">
+    <h3>Book Your Scorecard Review</h3>
+    <p>Enter your details and an engineer will reach out within one business day to schedule a 30-minute walkthrough.</p>
+    <div class="input-group">
+      <label class="input-label">Name</label>
+      <input type="text" id="sched-name" placeholder="Your name">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Work Email</label>
+      <input type="email" id="sched-email" placeholder="you@company.com">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Company / Organization</label>
+      <input type="text" id="sched-company" placeholder="Optional">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="submitSchedule()">Request Review</button>
+      <button class="btn btn-ghost" onclick="closeModal('schedule-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER INFO GATE MODAL -->
+<div class="modal-overlay" id="user-info-modal">
+  <div class="modal">
+    <h3>Before We Begin</h3>
+    <p>Please provide your details so we can personalise your scorecard and follow up with tailored recommendations.</p>
+    <div class="input-group">
+      <label class="input-label">Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="gate-name" placeholder="Your full name">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Work Email <span style="color:var(--red)">*</span></label>
+      <input type="email" id="gate-email" placeholder="you@company.com">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Company / Organization</label>
+      <input type="text" id="gate-company" placeholder="Your company or organization">
+    </div>
+    <div id="gate-error" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="submitUserInfo()">Start Assessment →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== QUESTIONS =====
+const questions = [
+  {
+    id: 'env',
+    text: 'Which best describes your environment?',
+    hint: 'Select the option that covers the majority of your infrastructure footprint.',
+    options: ['Mostly on-premises', 'Mostly cloud (AWS / Azure / GCP)', 'Hybrid (on-prem + cloud)', 'Edge / OT / ICS environments']
+  },
+  {
+    id: 'os',
+    text: 'What operating systems are in scope?',
+    hint: 'Select your primary OS landscape.',
+    options: ['Windows only', 'Linux / Unix only', 'Both Windows and Linux', 'Mix including macOS or other']
+  },
+  {
+    id: 'scale',
+    text: 'Roughly how many endpoints and servers are in scope?',
+    hint: 'Approximate range is fine.',
+    options: ['Fewer than 50', '50 – 250', '251 – 1,000', 'More than 1,000']
+  },
+  {
+    id: 'baselines',
+    text: 'Do you use secure configuration baselines (e.g., CIS Benchmarks or STIGs)?',
+    hint: 'Formal policies or documented baselines count.',
+    options: ['Yes — applied and enforced', 'Partially — some systems', 'Planning to implement', 'Not currently using baselines']
+  },
+  {
+    id: 'drift',
+    text: 'How do you detect and correct configuration drift?',
+    hint: 'Configuration drift = unintended changes to hardened settings.',
+    options: ['Continuous automated monitoring and remediation', 'Periodic scripts or scheduled scans', 'Manual audits only', 'Not sure / not measured']
+  },
+  {
+    id: 'patch',
+    text: 'How quickly are critical patches typically applied?',
+    hint: 'Think about your last few emergency patch cycles.',
+    options: ['Within 24–72 hours', 'Within 1–2 weeks', 'Within 30 days', 'More than 30 days / varies widely']
+  },
+  {
+    id: 'mfa',
+    text: 'Is MFA enforced for privileged access?',
+    hint: 'Privileged = admin, root, service accounts, domain controllers.',
+    options: ['Always — all privileged accounts', 'Most systems — some gaps remain', 'A few systems only', 'No / Unknown']
+  },
+  {
+    id: 'rbac',
+    text: 'Do you enforce RBAC / least privilege across admin tasks?',
+    hint: 'Least privilege = no standing admin access; just-in-time or role-scoped.',
+    options: ['Always — formally enforced', 'Partially implemented', 'Informal / best-effort', 'No / Unknown']
+  },
+  {
+    id: 'evidence',
+    text: 'Can you produce evidence of configuration compliance within 48 hours?',
+    hint: 'E.g., benchmark scan results, policy exports, audit-ready reports.',
+    options: ['Yes — automated reporting available', 'Yes — with some manual effort', 'Possible but would take significant effort', 'No capability currently']
+  },
+  {
+    id: 'intent',
+    text: 'What is your primary objective for this assessment?',
+    hint: 'This helps us tailor your scorecard recommendations.',
+    options: ['Improve internal hardening process', 'Evaluate tooling options', 'Prepare for an upcoming audit (next 90 days)', 'General baseline check / exploration']
+  }
+];
+
+// ===== SCORING WEIGHTS =====
+const scoring = {
+  baselines:  { 'Yes — applied and enforced': 20, 'Partially — some systems': 12, 'Planning to implement': 6, 'Not currently using baselines': 0 },
+  drift:      { 'Continuous automated monitoring and remediation': 20, 'Periodic scripts or scheduled scans': 12, 'Manual audits only': 5, 'Not sure / not measured': 0 },
+  patch:      { 'Within 24–72 hours': 15, 'Within 1–2 weeks': 10, 'Within 30 days': 5, 'More than 30 days / varies widely': 0 },
+  mfa:        { 'Always — all privileged accounts': 15, 'Most systems — some gaps remain': 9, 'A few systems only': 4, 'No / Unknown': 0 },
+  rbac:       { 'Always — formally enforced': 15, 'Partially implemented': 9, 'Informal / best-effort': 3, 'No / Unknown': 0 },
+  evidence:   { 'Yes — automated reporting available': 15, 'Yes — with some manual effort': 10, 'Possible but would take significant effort': 4, 'No capability currently': 0 }
+};
+
+let answers = {};
+let current = 0;
+
+function renderQuestion(idx) {
+  const q = questions[idx];
+  document.getElementById('q-number').textContent = `Question ${idx + 1} of ${questions.length}`;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-hint').textContent = q.hint;
+
+  const ol = document.getElementById('options-list');
+  ol.innerHTML = '';
+  q.options.forEach(opt => {
+    const div = document.createElement('div');
+    div.className = 'option' + (answers[q.id] === opt ? ' selected' : '');
+    div.innerHTML = `<div class="option-dot"></div><span class="option-text">${opt}</span>`;
+    div.onclick = () => selectOption(q.id, opt, div);
+    ol.appendChild(div);
+  });
+
+  document.getElementById('btn-next').disabled = !answers[q.id];
+  document.getElementById('btn-back').style.visibility = idx === 0 ? 'hidden' : 'visible';
+  document.getElementById('btn-next').textContent = idx === questions.length - 1 ? 'View Results →' : 'Next →';
+
+  updateProgress(idx);
+
+  // animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  requestAnimationFrame(() => { card.style.animation = 'fadeUp 0.35s ease both'; });
+}
+
+function selectOption(qid, val, el) {
+  answers[qid] = val;
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn-next').disabled = false;
+}
+
+function updateProgress(idx) {
+  const answered = Object.keys(answers).length;
+  const pct = Math.round((answered / questions.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('prog-count').textContent = answered + ' / ' + questions.length;
+}
+
+function goNext() {
+  if (current < questions.length - 1) {
+    current++;
+    renderQuestion(current);
+  } else {
+    showResults();
+  }
+}
+
+function goBack() {
+  if (current > 0) { current--; renderQuestion(current); }
+}
+
+// ===== COMPUTE SCORE =====
+function computeScore() {
+  let total = 0;
+  for (const [key, map] of Object.entries(scoring)) {
+    const ans = answers[key];
+    if (ans && map[ans] !== undefined) total += map[ans];
+  }
+  return Math.min(100, total);
+}
+
+function getBand(score) {
+  if (score >= 80) return { band: 'Continuous', color: '#00a870', desc: 'Your organization demonstrates mature, automated hardening practices aligned with leading benchmarks. Focus is on optimization and continuous improvement.' };
+  if (score >= 60) return { band: 'Managed', color: '#4C00FF', desc: 'Solid hardening foundations are in place with structured processes. Key gaps remain around automation and evidence readiness.' };
+  if (score >= 35) return { band: 'Developing', color: '#d97706', desc: 'Baseline controls exist but coverage is inconsistent. Significant opportunities to reduce drift exposure and improve auditability.' };
+  return { band: 'Foundational', color: '#d4351c', desc: 'Critical hardening controls are missing or ad-hoc. Immediate action recommended to establish configuration baselines and drift detection.' };
+}
+
+function getLayerScores() {
+  const a = answers;
+
+  const serverVM   = scoreLayer([
+    [a.baselines, { 'Yes — applied and enforced': 90, 'Partially — some systems': 60, 'Planning to implement': 35, 'Not currently using baselines': 15 }],
+    [a.drift,     { 'Continuous automated monitoring and remediation': 10 }]
+  ]);
+  const osBaseline = scoreLayer([
+    [a.baselines, { 'Yes — applied and enforced': 80, 'Partially — some systems': 55, 'Planning to implement': 30, 'Not currently using baselines': 10 }],
+    [a.os,        { 'Both Windows and Linux': -5, 'Mix including macOS or other': -5 }]
+  ]);
+  const netCtrl    = scoreLayer([
+    [a.mfa,       { 'Always — all privileged accounts': 80, 'Most systems — some gaps remain': 55, 'A few systems only': 30, 'No / Unknown': 10 }],
+    [a.rbac,      { 'Always — formally enforced': 20, 'Partially implemented': 10 }]
+  ]);
+  const appHard    = scoreLayer([
+    [a.patch,     { 'Within 24–72 hours': 85, 'Within 1–2 weeks': 65, 'Within 30 days': 40, 'More than 30 days / varies widely': 15 }],
+    [a.rbac,      { 'Always — formally enforced': 15, 'Partially implemented': 5 }]
+  ]);
+  const dbCtrl     = scoreLayer([
+    [a.rbac,      { 'Always — formally enforced': 75, 'Partially implemented': 50, 'Informal / best-effort': 25, 'No / Unknown': 10 }],
+    [a.evidence,  { 'Yes — automated reporting available': 25, 'Yes — with some manual effort': 15 }]
+  ]);
+
+  return [
+    { name: 'Server / VM Hardening', score: clamp(serverVM) },
+    { name: 'OS Baseline Controls', score: clamp(osBaseline) },
+    { name: 'Network & Identity', score: clamp(netCtrl) },
+    { name: 'App Hardening Practices', score: clamp(appHard) },
+    { name: 'Database Controls', score: clamp(dbCtrl) }
+  ];
+}
+
+function scoreLayer(pairs) {
+  let s = 0;
+  for (const [ans, map] of pairs) {
+    if (ans && map[ans]) s += map[ans];
+  }
+  return s;
+}
+
+function clamp(v) { return Math.max(5, Math.min(100, Math.round(v))); }
+
+function getDrift() {
+  const d = answers.drift;
+  if (d === 'Continuous automated monitoring and remediation') return { val: 'LOW', color: '#00a870', sub: 'Automated drift correction reduces exposure window significantly.' };
+  if (d === 'Periodic scripts or scheduled scans') return { val: 'MEDIUM', color: '#d97706', sub: 'Periodic detection leaves windows of undetected drift between cycles.' };
+  if (d === 'Manual audits only') return { val: 'HIGH', color: '#d4351c', sub: 'Manual-only processes create large, unpredictable exposure windows.' };
+  return { val: 'HIGH', color: '#d4351c', sub: 'Unknown drift status represents an uncontrolled risk surface.' };
+}
+
+function getEvidence() {
+  const e = answers.evidence;
+  if (e === 'Yes — automated reporting available') return { val: '< 4 hrs', color: '#00a870', sub: 'Automated reports support rapid audit response.' };
+  if (e === 'Yes — with some manual effort') return { val: '24–48 hrs', color: '#d97706', sub: 'Manual assembly possible but introduces risk under deadline.' };
+  if (e === 'Possible but would take significant effort') return { val: '5–10 days', color: '#d4351c', sub: 'Evidence production under audit pressure is high risk.' };
+  return { val: 'Unknown', color: '#d4351c', sub: 'No evidence production pathway currently identified.' };
+}
+
+function getGaps() {
+  const gaps = [];
+  const a = answers;
+
+  if (!['Yes — applied and enforced'].includes(a.baselines))
+    gaps.push('Configuration baselines are not fully implemented — systems may deviate from CIS / STIG benchmarks with no formal detection.');
+  if (['Manual audits only', 'Not sure / not measured'].includes(a.drift))
+    gaps.push('No continuous or automated drift detection means configuration changes go unnoticed between audit cycles.');
+  if (['No / Unknown', 'A few systems only'].includes(a.mfa))
+    gaps.push('MFA gaps on privileged accounts represent the single highest-probability initial access path for adversaries.');
+  if (['Informal / best-effort', 'No / Unknown'].includes(a.rbac))
+    gaps.push('Least privilege / RBAC is not enforced — standing admin access dramatically expands blast radius of any credential compromise.');
+  if (['More than 30 days / varies widely'].includes(a.patch))
+    gaps.push('Critical patch latency beyond 30 days leaves known, weaponized vulnerabilities exploitable for extended periods.');
+  if (['No capability currently', 'Possible but would take significant effort'].includes(a.evidence))
+    gaps.push('Inability to produce compliance evidence quickly will result in failed audits and unquantifiable regulatory exposure.');
+
+  while (gaps.length < 5) {
+    gaps.push('Formal hardening program documentation and ownership model not confirmed — a gap that compounds all technical controls deficiencies.');
+  }
+
+  return gaps.slice(0, 5);
+}
+
+function getWins() {
+  const wins = [];
+  const a = answers;
+
+  if (a.mfa !== 'Always — all privileged accounts')
+    wins.push('Enforce MFA on all privileged and service accounts using your existing identity provider — typically a 2–3 day configuration effort.');
+  if (a.baselines !== 'Yes — applied and enforced')
+    wins.push('Download and apply a CIS Benchmark Level 1 profile for your primary OS — free, documented, and immediate coverage with no tooling purchase.');
+  if (['Manual audits only', 'Not sure / not measured'].includes(a.drift))
+    wins.push('Deploy a free configuration scanning tool (OpenSCAP, Lynis, or Microsoft Security Compliance Toolkit) to establish a drift detection baseline within a week.');
+  if (a.patch !== 'Within 24–72 hours')
+    wins.push('Implement a dedicated emergency patch SLA policy distinguishing CVSS 9+ from standard cadence — policy change, not technology change.');
+  if (a.evidence !== 'Yes — automated reporting available')
+    wins.push('Create a simple evidence collection runbook and assign ownership — even a manual checklist dramatically reduces time-to-evidence under audit pressure.');
+
+  while (wins.length < 3) {
+    wins.push('Document your current hardening scope and ownership — foundational for any audit, vendor evaluation, or team onboarding effort.');
+  }
+
+  return wins.slice(0, 3);
+}
+
+// ===== PUPPET RECOMMENDATIONS =====
+// Each rec: { icon, title, desc, caps: [{label, type}] }
+// types: 'cap-core' | 'cap-module' | 'cap-enterprise'
+function getPuppetRecs() {
+  const a = answers;
+  const recs = [];
+
+  // --- Configuration Baselines ---
+  if (a.baselines !== 'Yes — applied and enforced') {
+    recs.push({
+      icon: '📐',
+      title: 'Enforce CIS / STIG Baselines with Puppet DSL',
+      desc: 'Puppet\'s declarative language lets you codify CIS Benchmark and STIG controls as Puppet resources — file permissions, service states, sysctl values, audit rules — and enforce them continuously across every node in scope. Any drift from baseline is automatically detected and corrected on each agent run (default: 30 min).',
+      caps: [
+        { label: 'Puppet DSL (Resources & Classes)', type: 'cap-core' },
+        { label: 'puppet-cisecurity-benchmarks module', type: 'cap-module' },
+        { label: 'puppet-os_hardening module', type: 'cap-module' },
+        { label: 'puppet-disa_stig module', type: 'cap-module' },
+        { label: 'Desired State Enforcement', type: 'cap-core' },
+      ]
+    });
+  }
+
+  // --- Drift Detection & Remediation ---
+  if (['Manual audits only', 'Not sure / not measured', 'Periodic scripts or scheduled scans'].includes(a.drift)) {
+    recs.push({
+      icon: '🔄',
+      title: 'Continuous Drift Detection & Auto-Remediation',
+      desc: 'Puppet agents report actual vs. desired state on every catalog run. Puppet Enterprise\'s Continuous Delivery and Compliance Reporting surfaces drift the moment it occurs — with a full audit trail of what changed, on which node, and when. No more relying on periodic scans with days-long exposure windows.',
+      caps: [
+        { label: 'Puppet Agent (catalog enforcement)', type: 'cap-core' },
+        { label: 'Puppet Server (catalog compilation)', type: 'cap-core' },
+        { label: 'PE Compliance Reporting', type: 'cap-enterprise' },
+        { label: 'PE Continuous Delivery (CD4PE)', type: 'cap-enterprise' },
+        { label: 'Event-Driven Ansible + Puppet (remediation triggers)', type: 'cap-enterprise' },
+        { label: 'PuppetDB (node state history)', type: 'cap-core' },
+      ]
+    });
+  }
+
+  // --- Patch Cadence ---
+  if (['Within 30 days', 'More than 30 days / varies widely'].includes(a.patch)) {
+    recs.push({
+      icon: '🩹',
+      title: 'Accelerate Patch Cadence with Puppet Patching',
+      desc: 'The puppet-patching module and Puppet Enterprise Patch Management provide orchestrated, staged patching across your fleet — with pre/post-patch task hooks, rollback capability, and full reporting. Emergency patch cycles that previously took weeks can be reduced to hours with coordinated rolling deployments.',
+      caps: [
+        { label: 'puppet-patching module', type: 'cap-module' },
+        { label: 'PE Patch Management', type: 'cap-enterprise' },
+        { label: 'Puppet Bolt (agentless task execution)', type: 'cap-core' },
+        { label: 'Puppet Tasks & Plans (orchestration)', type: 'cap-core' },
+        { label: 'PE Orchestrator (staged rollouts)', type: 'cap-enterprise' },
+      ]
+    });
+  }
+
+  // --- MFA / Privileged Identity ---
+  if (['No / Unknown', 'A few systems only', 'Most systems — some gaps remain'].includes(a.mfa)) {
+    recs.push({
+      icon: '🔐',
+      title: 'Harden Privileged Account Configuration via Puppet',
+      desc: 'While MFA enforcement requires your IdP, Puppet ensures the underlying SSH, PAM, and sudo configurations that gate privileged access are hardened and never drift. Puppet can enforce authorized key management, PAM module configuration, and SSHd hardening controls across your entire OS fleet consistently.',
+      caps: [
+        { label: 'puppet-ssh module', type: 'cap-module' },
+        { label: 'puppet-pam module', type: 'cap-module' },
+        { label: 'puppet-sudo module', type: 'cap-module' },
+        { label: 'puppet-accounts module', type: 'cap-module' },
+        { label: 'PE RBAC (Puppet console access control)', type: 'cap-enterprise' },
+      ]
+    });
+  }
+
+  // --- RBAC / Least Privilege ---
+  if (['Informal / best-effort', 'No / Unknown', 'Partially implemented'].includes(a.rbac)) {
+    recs.push({
+      icon: '🛡️',
+      title: 'Enforce Least Privilege with Puppet RBAC Controls',
+      desc: 'Puppet Enterprise\'s built-in RBAC model enforces least privilege on who can run what Puppet code against which nodes — preventing engineers from making ad-hoc changes outside the controlled pipeline. Combined with Puppet\'s sudo and user management modules, you can enforce the principle of least privilege at both the Puppet operations layer and the OS layer simultaneously.',
+      caps: [
+        { label: 'PE Role-Based Access Control (RBAC)', type: 'cap-enterprise' },
+        { label: 'PE Node Groups & Environments', type: 'cap-enterprise' },
+        { label: 'puppet-sudo module', type: 'cap-module' },
+        { label: 'puppet-firewall module', type: 'cap-module' },
+        { label: 'Puppet Environments (code isolation)', type: 'cap-core' },
+      ]
+    });
+  }
+
+  // --- Evidence Readiness ---
+  if (['No capability currently', 'Possible but would take significant effort', 'Yes — with some manual effort'].includes(a.evidence)) {
+    recs.push({
+      icon: '📋',
+      title: 'Automated Compliance Evidence with PE Reporting',
+      desc: 'Puppet Enterprise generates continuous, timestamped compliance reports across your node fleet — exportable on demand. Every resource enforcement event is logged to PuppetDB, giving you a queryable, auditable record of configuration state that can be produced for auditors in minutes, not days. Pair with the PE Compliance module for CIS/STIG-mapped evidence packages.',
+      caps: [
+        { label: 'PE Compliance Reporting Dashboard', type: 'cap-enterprise' },
+        { label: 'PuppetDB (queryable state store)', type: 'cap-core' },
+        { label: 'PE API (report export / SIEM integration)', type: 'cap-enterprise' },
+        { label: 'puppet-compliance module', type: 'cap-module' },
+        { label: 'PE Audit Logging', type: 'cap-enterprise' },
+      ]
+    });
+  }
+
+  // Scale-specific recommendation
+  if (['251 – 1,000', 'More than 1,000'].includes(a.scale)) {
+    recs.push({
+      icon: '⚡',
+      title: 'Scale Hardening Operations with PE Orchestration',
+      desc: 'At your infrastructure scale, ad-hoc or sequential remediation approaches will not meet patch SLAs or audit timelines. Puppet Enterprise\'s Orchestrator enables parallel, staged task execution across thousands of nodes — with real-time status, selective targeting by node group, OS, or environment, and full rollback support.',
+      caps: [
+        { label: 'PE Orchestrator (parallel execution)', type: 'cap-enterprise' },
+        { label: 'PE Node Classification', type: 'cap-enterprise' },
+        { label: 'Puppet Bolt Plans (complex workflows)', type: 'cap-core' },
+        { label: 'PE High Availability', type: 'cap-enterprise' },
+        { label: 'Puppet Forge (pre-built hardening content)', type: 'cap-module' },
+      ]
+    });
+  }
+
+  // Cloud / Hybrid specific
+  if (['Mostly cloud (AWS / Azure / GCP)', 'Hybrid (on-prem + cloud)'].includes(a.env)) {
+    recs.push({
+      icon: '☁️',
+      title: 'Unified Hardening Across Cloud & On-Prem with Puppet',
+      desc: 'Puppet\'s agent-based model applies the same hardening manifests uniformly across on-premises VMs, cloud instances (EC2, Azure VMs, GCE), and containers — eliminating configuration divergence between environments. Cloud-provisioned instances can be automatically enrolled and hardened at boot via cloud-init or user-data integration.',
+      caps: [
+        { label: 'puppet-aws / puppet-azure modules', type: 'cap-module' },
+        { label: 'Puppet Bolt (agentless cloud targets)', type: 'cap-core' },
+        { label: 'PE Cloud Discovery', type: 'cap-enterprise' },
+        { label: 'puppet-cloud_init integration', type: 'cap-module' },
+        { label: 'PE Auto-signing (node onboarding)', type: 'cap-enterprise' },
+      ]
+    });
+  }
+
+  // Always include a foundational Puppet workflow rec
+  recs.push({
+    icon: '🔧',
+    title: 'Establish a Hardening Pipeline with Puppet + CD4PE',
+    desc: 'Treat your hardening manifests as code: version-controlled in Git, tested in staging environments, and promoted to production via Puppet\'s Continuous Delivery for Puppet Enterprise (CD4PE). This pipeline approach ensures that every hardening change is peer-reviewed, impact-tested, and deployed in a controlled, auditable way — the foundation of a Managed or Continuous readiness posture.',
+    caps: [
+      { label: 'Git-backed Puppet Code', type: 'cap-core' },
+      { label: 'CD4PE (Continuous Delivery)', type: 'cap-enterprise' },
+      { label: 'Puppet Environments (dev/staging/prod)', type: 'cap-core' },
+      { label: 'rspec-puppet (module testing)', type: 'cap-module' },
+      { label: 'PE Impact Analysis', type: 'cap-enterprise' },
+    ]
+  });
+
+  return recs.slice(0, 6); // cap at 6 for layout
+}
+
+// ===== SHOW RESULTS =====
+function showResults() {
+  document.getElementById('assessment-section').style.display = 'none';
+  const rs = document.getElementById('results-section');
+  rs.style.display = 'block';
+
+  const score = computeScore();
+  const band  = getBand(score);
+  const layers = getLayerScores();
+  const drift  = getDrift();
+  const evid   = getEvidence();
+  const gaps   = getGaps();
+  const wins   = getWins();
+
+  // Score ring animation
+  setTimeout(() => {
+    let n = 0;
+    const interval = setInterval(() => {
+      n = Math.min(n + 2, score);
+      document.getElementById('score-num').textContent = n;
+      if (n >= score) clearInterval(interval);
+    }, 16);
+    const circumference = 2 * Math.PI * 70;
+    const offset = circumference * (1 - score / 100);
+    document.getElementById('ring-fill').style.strokeDashoffset = offset;
+    document.getElementById('ring-fill').style.stroke = band.color;
+  }, 300);
+
+  document.getElementById('score-band').textContent = band.band;
+  document.getElementById('score-band').style.color = band.color;
+  document.getElementById('score-band-desc').textContent = band.desc;
+
+  // Layers
+  const lg = document.getElementById('layers-grid');
+  lg.innerHTML = '';
+  layers.forEach(l => {
+    const grade = l.score >= 70 ? 'grade-high' : l.score >= 40 ? 'grade-mid' : 'grade-low';
+    const gradeLabel = l.score >= 70 ? 'GOOD' : l.score >= 40 ? 'FAIR' : 'RISK';
+    const barColor = l.score >= 70 ? '#00a870' : l.score >= 40 ? '#d97706' : '#d4351c';
+    lg.innerHTML += `
+      <div class="layer-card">
+        <div class="layer-name">${l.name}</div>
+        <div class="layer-bar-track">
+          <div class="layer-bar-fill" style="width:0%; background:${barColor}" data-w="${l.score}"></div>
+        </div>
+        <div class="layer-score-row">
+          <span class="layer-score-val">${l.score}</span>
+          <span class="layer-score-grade ${grade}">${gradeLabel}</span>
+        </div>
+      </div>`;
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.layer-bar-fill').forEach(b => {
+      b.style.width = b.dataset.w + '%';
+    });
+  }, 400);
+
+  // Indicators
+  document.getElementById('drift-val').textContent = drift.val;
+  document.getElementById('drift-val').style.color = drift.color;
+  document.getElementById('drift-sub').textContent = drift.sub;
+  document.getElementById('evidence-val').textContent = evid.val;
+  document.getElementById('evidence-val').style.color = evid.color;
+  document.getElementById('evidence-sub').textContent = evid.sub;
+
+  // Gaps
+  const gl = document.getElementById('gaps-list');
+  gl.innerHTML = gaps.map((g, i) =>
+    `<li class="gap-item"><span class="gap-num">G${i+1}</span><span class="gap-text">${g}</span></li>`
+  ).join('');
+
+  // Wins
+  const wl = document.getElementById('wins-list');
+  wl.innerHTML = wins.map(w =>
+    `<li class="win-item"><span class="win-icon">✓</span><span class="win-text">${w}</span></li>`
+  ).join('');
+
+  // Puppet Recommendations
+  const puppetRecs = getPuppetRecs();
+  const prl = document.getElementById('puppet-recs-list');
+  prl.innerHTML = puppetRecs.map(r => `
+    <div class="puppet-rec">
+      <div class="puppet-rec-header">
+        <div class="puppet-rec-icon">${r.icon}</div>
+        <div class="puppet-rec-body">
+          <div class="puppet-rec-title">${r.title}</div>
+          <div class="puppet-rec-desc">${r.desc}</div>
+          <div class="puppet-caps">
+            ${r.caps.map(c => `
+              <span class="puppet-cap ${c.type}">
+                <span class="puppet-cap-dot"></span>${c.label}
+              </span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('dl-bar').classList.add('visible');
+}
+
+// ===== PDF DOWNLOAD (pure jsPDF — no external canvas dependency) =====
+function downloadPDF() {
+  const btn = document.getElementById('dl-btn');
+  const overlay = document.getElementById('pdf-overlay');
+  const overlayText = document.getElementById('pdf-overlay-text');
+
+  btn.disabled = true;
+  overlay.classList.add('active');
+  overlayText.textContent = 'Building your scorecard...';
+
+  // Use setTimeout so the overlay renders before we block the thread
+  setTimeout(function() {
+    try {
+      const score      = computeScore();
+      const band       = getBand(score);
+      const layers     = getLayerScores();
+      const drift      = getDrift();
+      const evid       = getEvidence();
+      const gaps       = getGaps();
+      const wins       = getWins();
+      const puppetRecs = getPuppetRecs();
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      const W = 210;        // page width mm
+      const ML = 14;        // margin left
+      const MR = 14;        // margin right
+      const CW = W - ML - MR; // content width
+      const PAGE_H = 297;
+      const SAFE_BOTTOM = 275; // leave footer room
+
+      let y = 0;
+
+      // ---- helpers ----
+      function hex(h) {
+        const r = parseInt(h.slice(1,3),16);
+        const g = parseInt(h.slice(3,5),16);
+        const b = parseInt(h.slice(5,7),16);
+        return [r,g,b];
+      }
+
+      function setFill(h)   { doc.setFillColor(...hex(h)); }
+      function setStroke(h) { doc.setDrawColor(...hex(h)); }
+      function setTxt(h)    { doc.setTextColor(...hex(h)); }
+
+      function newPage() {
+        doc.addPage();
+        y = 16;
+        // subtle top rule
+        setFill('#0f172a');
+        doc.rect(0, 0, W, 6, 'F');
+      }
+
+      function checkPage(needed) {
+        if (y + needed > SAFE_BOTTOM) newPage();
+      }
+
+      function sectionHeading(title) {
+        checkPage(12);
+        setFill('#F3EEFF');
+        doc.roundedRect(ML, y, CW, 8, 1, 1, 'F');
+        setStroke('#C4B5FD');
+        doc.setLineWidth(0.3);
+        doc.roundedRect(ML, y, CW, 8, 1, 1, 'S');
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(8);
+        setTxt('#4C00FF');
+        doc.text(title.toUpperCase(), ML + 3, y + 5.5);
+        y += 12;
+      }
+
+      function textBlock(txt, x, yy, maxW, size, color, style) {
+        doc.setFont('helvetica', style || 'normal');
+        doc.setFontSize(size);
+        setTxt(color);
+        const lines = doc.splitTextToSize(txt, maxW);
+        doc.text(lines, x, yy);
+        return lines.length * size * 0.3528 * 1.35; // approx height
+      }
+
+      // ============================================================
+      // PAGE 1 — HEADER + SCORE + LAYER BARS + INDICATORS
+      // ============================================================
+
+      // Dark header bar
+      setFill('#0F172A');
+      doc.rect(0, 0, W, 30, 'F');
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(7);
+      setTxt('#8B5CF6');
+      doc.text('SYSTEM SECURITY ASSESSMENT  ·  HARDENING READINESS SCORECARD', ML, 10);
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(14);
+      setTxt('#FFFFFF');
+      doc.text('System Hardening Readiness Report', ML, 19);
+
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      setTxt('#94A3B8');
+      doc.text('Generated ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) + '   ·   CIS Benchmarks  ·  DISA STIGs', ML, 26);
+
+      y = 38;
+
+      // ---- Overall score block ----
+      const bandColors = { Continuous:'#16A34A', Managed:'#4C00FF', Developing:'#D97706', Foundational:'#DC2626' };
+      const bandBgColors = { Continuous:'#F0FDF4', Managed:'#F3EEFF', Developing:'#FFFBEB', Foundational:'#FFF1F2' };
+      const bColor = bandColors[band.band] || '#374151';
+      const bBg    = bandBgColors[band.band] || '#F9FAFB';
+
+      // Score card background
+      setFill(bBg);
+      setStroke(bColor);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(ML, y, CW, 34, 2, 2, 'FD');
+
+      // Big score number
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(34);
+      setTxt(bColor);
+      doc.text(String(score), ML + 6, y + 22);
+
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      setTxt('#6B7280');
+      doc.text('/ 100', ML + 6 + doc.getTextWidth(String(score)) + 2, y + 22);
+
+      // Score ring — draw a simple arc using lines (jsPDF arc)
+      const cx = ML + 54, cy = y + 17, radius = 12;
+      doc.setDrawColor(226,232,240);
+      doc.setLineWidth(2.5);
+      doc.circle(cx, cy, radius, 'S');
+      // Colored arc overlay (approximate with a thin colored circle clip — use stroke dash trick)
+      setStroke(bColor);
+      doc.setLineWidth(2.5);
+      const pct = score / 100;
+      // Draw arc segments
+      const startAngle = -Math.PI / 2;
+      const endAngle = startAngle + (2 * Math.PI * pct);
+      const steps = Math.max(4, Math.round(40 * pct));
+      for (let i = 0; i < steps; i++) {
+        const a1 = startAngle + (endAngle - startAngle) * (i / steps);
+        const a2 = startAngle + (endAngle - startAngle) * ((i+1) / steps);
+        doc.line(
+          cx + radius * Math.cos(a1), cy + radius * Math.sin(a1),
+          cx + radius * Math.cos(a2), cy + radius * Math.sin(a2)
+        );
+      }
+
+      // Band label + description
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(16);
+      setTxt(bColor);
+      doc.text(band.band, ML + 72, y + 14);
+
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8.5);
+      setTxt('#374151');
+      const descLines = doc.splitTextToSize(band.desc, CW - 74);
+      doc.text(descLines, ML + 72, y + 21);
+
+      y += 40;
+
+      // ---- Drift + Evidence indicators side by side ----
+      checkPage(22);
+      const halfW = (CW - 6) / 2;
+
+      function indicatorBox(label, value, subtext, vcolor, bx, by) {
+        setFill('#F8FAFC');
+        setStroke('#E2E8F0');
+        doc.setLineWidth(0.3);
+        doc.roundedRect(bx, by, halfW, 18, 1.5, 1.5, 'FD');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7);
+        setTxt('#94A3B8');
+        doc.text(label.toUpperCase(), bx + 4, by + 5.5);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(13);
+        setTxt(vcolor);
+        doc.text(value, bx + 4, by + 12);
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7);
+        setTxt('#94A3B8');
+        const sub = doc.splitTextToSize(subtext, halfW - 8);
+        doc.text(sub[0] || '', bx + 4, by + 16.5);
+      }
+
+      const dCol = drift.color==='#00a870'?'#16A34A':drift.color==='#d97706'?'#D97706':'#DC2626';
+      const eCol = evid.color==='#00a870'?'#16A34A':evid.color==='#d97706'?'#D97706':'#DC2626';
+      indicatorBox('Drift Exposure', drift.val, drift.sub, dCol, ML, y);
+      indicatorBox('Evidence Readiness', evid.val, evid.sub, eCol, ML + halfW + 6, y);
+      y += 24;
+
+      // ---- Layer scores ----
+      sectionHeading('Layer Scores');
+      layers.forEach(function(l) {
+        checkPage(14);
+        const lColor = l.score >= 70 ? '#16A34A' : l.score >= 40 ? '#D97706' : '#DC2626';
+        const lBg    = l.score >= 70 ? '#F0FDF4' : l.score >= 40 ? '#FFFBEB' : '#FFF1F2';
+        const lLabel = l.score >= 70 ? 'GOOD' : l.score >= 40 ? 'FAIR' : 'RISK';
+        const BAR_W  = CW - 60;
+        const BAR_X  = ML + 52;
+
+        // Layer name
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8.5);
+        setTxt('#374151');
+        doc.text(l.name, ML, y + 4.5);
+
+        // Bar track
+        setFill('#F1F5F9');
+        doc.roundedRect(BAR_X, y + 1, BAR_W, 4, 1, 1, 'F');
+
+        // Bar fill
+        setFill(lColor);
+        const fillW = Math.max(2, BAR_W * l.score / 100);
+        doc.roundedRect(BAR_X, y + 1, fillW, 4, 1, 1, 'F');
+
+        // Score number
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(10);
+        setTxt('#111827');
+        doc.text(String(l.score), W - MR - 22, y + 5);
+
+        // Grade badge
+        setFill(lBg);
+        setStroke(lColor);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(W - MR - 14, y, 14, 6, 1, 1, 'FD');
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(6.5);
+        setTxt(lColor);
+        doc.text(lLabel, W - MR - 14 + (14 - doc.getTextWidth(lLabel)) / 2, y + 4.2);
+
+        y += 11;
+      });
+      y += 4;
+
+      // ============================================================
+      // GAPS
+      // ============================================================
+      sectionHeading('Top 5 Prioritized Gaps');
+      gaps.forEach(function(g, i) {
+        const lines = doc.splitTextToSize(g, CW - 16);
+        const boxH = lines.length * 4.8 + 8;
+        checkPage(boxH + 4);
+
+        setFill('#FFF5F7');
+        setStroke('#FECDD3');
+        doc.setLineWidth(0.3);
+        doc.roundedRect(ML, y, CW, boxH, 1.5, 1.5, 'FD');
+        // Left accent bar
+        setFill('#E11D48');
+        doc.rect(ML, y, 3, boxH, 'F');
+
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(8);
+        setTxt('#E11D48');
+        doc.text('G' + (i+1), ML + 6, y + 5.5);
+
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8.5);
+        setTxt('#374151');
+        doc.text(lines, ML + 14, y + 5.5);
+        y += boxH + 4;
+      });
+      y += 2;
+
+      // ============================================================
+      // QUICK WINS
+      // ============================================================
+      sectionHeading('Most Likely Quick Wins  \u00B7  14 Days');
+      wins.forEach(function(w) {
+        const lines = doc.splitTextToSize(w, CW - 14);
+        const boxH = lines.length * 4.8 + 8;
+        checkPage(boxH + 4);
+
+        setFill('#F0FDF4');
+        setStroke('#BBF7D0');
+        doc.setLineWidth(0.3);
+        doc.roundedRect(ML, y, CW, boxH, 1.5, 1.5, 'FD');
+        setFill('#16A34A');
+        doc.rect(ML, y, 3, boxH, 'F');
+
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(10);
+        setTxt('#16A34A');
+        doc.text('\u2713', ML + 5.5, y + 6);
+
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8.5);
+        setTxt('#374151');
+        doc.text(lines, ML + 13, y + 5.5);
+        y += boxH + 4;
+      });
+      y += 2;
+
+      // ============================================================
+      // PUPPET RECOMMENDATIONS
+      // ============================================================
+      sectionHeading('Puppet Capability Recommendations');
+
+      // Intro note
+      checkPage(12);
+      setFill('#F0F9FF');
+      setStroke('#BAE6FD');
+      doc.setLineWidth(0.3);
+      doc.roundedRect(ML, y, CW, 9, 1, 1, 'FD');
+      setFill('#0284C7');
+      doc.rect(ML, y, 3, 9, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      setTxt('#0C4A6E');
+      doc.text('Based on your responses, the following Puppet capabilities are specifically suited to close your identified gaps.', ML + 6, y + 5.5);
+      y += 13;
+
+      // Cap type legend
+      checkPage(8);
+      const legendItems = [
+        { label: 'Core / Open Source', color: '#F59E0B' },
+        { label: 'Forge Module',       color: '#3B82F6' },
+        { label: 'Enterprise Feature', color: '#22C55E' },
+      ];
+      let lx = ML;
+      legendItems.forEach(function(li) {
+        setFill(li.color);
+        doc.rect(lx, y + 0.5, 3.5, 3.5, 'F');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7);
+        setTxt('#6B7280');
+        doc.text(li.label, lx + 5, y + 3.8);
+        lx += 45;
+      });
+      y += 8;
+
+      // Map emoji icons to plain-text labels for PDF (jsPDF built-in fonts cannot render emoji)
+      const emojiToText = {
+        '\u{1F4D0}': '#',   // 📐
+        '\u{1F504}': '#',   // 🔄
+        '\u{1FA79}': '#',   // 🩹
+        '\u{1F510}': '#',   // 🔐
+        '\u{1F6E1}\uFE0F': '#', // 🛡️
+        '\u{1F6E1}': '#',   // 🛡 (without variant selector)
+        '\u{1F4CB}': '#',   // 📋
+        '\u26A1':    '#',   // ⚡
+        '\u2601\uFE0F': '#', // ☁️
+        '\u2601':    '#',   // ☁
+        '\u{1F527}': '#',   // 🔧
+      };
+      function stripEmoji(str) {
+        // Remove all emoji / surrogate pairs that Helvetica cannot render
+        return str.replace(/[\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]\uFE0F?/gu, '').trim();
+      }
+      function recNumber(idx) { return String(idx + 1); }
+
+      const PAD = 8; // inner padding for rec cards
+      const DESC_MAX_W = CW - PAD * 2;
+      const CAP_LABEL_W = 24;
+      const CAP_TEXT_W = CW - PAD * 2 - CAP_LABEL_W;
+
+      puppetRecs.forEach(function(r, ri) {
+        // Estimate height: title row + desc lines + cap lines
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        const descLines  = doc.splitTextToSize(r.desc, DESC_MAX_W);
+        const capsByType = { core:[], module:[], enterprise:[] };
+        r.caps.forEach(function(c) {
+          if (c.type==='cap-core') capsByType.core.push(c.label);
+          else if (c.type==='cap-module') capsByType.module.push(c.label);
+          else capsByType.enterprise.push(c.label);
+        });
+
+        const capLines = [];
+        if (capsByType.core.length)       capLines.push({ label:'[Core]',       caps: capsByType.core,       color:'#92400E', bg:'#FEF3C7' });
+        if (capsByType.module.length)     capLines.push({ label:'[Module]',     caps: capsByType.module,     color:'#1E3A8A', bg:'#DBEAFE' });
+        if (capsByType.enterprise.length) capLines.push({ label:'[Enterprise]', caps: capsByType.enterprise, color:'#14532D', bg:'#DCFCE7' });
+
+        let capLineCount = 0;
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7.5);
+        capLines.forEach(function(cl) {
+          const joined = doc.splitTextToSize(cl.caps.join('  \u00B7  '), CAP_TEXT_W);
+          capLineCount += joined.length;
+        });
+
+        const recH = 7 + descLines.length * 4.5 + capLineCount * 4.2 + capLines.length * 2 + 6;
+        checkPage(recH + 6);
+
+        // Outer card
+        setFill('#FAFAFA');
+        setStroke('#E5E7EB');
+        doc.setLineWidth(0.3);
+        doc.roundedRect(ML, y, CW, recH, 2, 2, 'FD');
+
+        // Title strip
+        setFill('#FFFBEB');
+        doc.roundedRect(ML, y, CW, 7, 2, 2, 'F');
+        doc.rect(ML, y + 3, CW, 4, 'F'); // square bottom corners
+
+        // Numbered circle instead of emoji
+        setFill('#4C00FF');
+        doc.circle(ML + 7, y + 3.5, 3, 'F');
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(7);
+        setTxt('#FFFFFF');
+        const numStr = recNumber(ri);
+        doc.text(numStr, ML + 7 - doc.getTextWidth(numStr) / 2, y + 5);
+
+        // Title text (stripped of emoji)
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(8.5);
+        setTxt('#1C1917');
+        doc.text(stripEmoji(r.title), ML + 13, y + 5);
+
+        let iy = y + 10;
+
+        // Description (properly wrapped)
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        setTxt('#6B7280');
+        doc.text(descLines, ML + PAD, iy);
+        iy += descLines.length * 4.5 + 2;
+
+        // Capability tags as text lines grouped by type
+        capLines.forEach(function(cl) {
+          doc.setFont('helvetica','normal');
+          doc.setFontSize(7.5);
+          const joined = doc.splitTextToSize(cl.caps.join('  \u00B7  '), CAP_TEXT_W);
+          doc.setFont('helvetica','bold');
+          doc.setFontSize(7.5);
+          setTxt(cl.color);
+          doc.text(cl.label, ML + PAD, iy);
+          doc.setFont('helvetica','normal');
+          doc.setFontSize(7.5);
+          setTxt('#374151');
+          doc.text(joined, ML + PAD + CAP_LABEL_W, iy);
+          iy += joined.length * 4.2 + 2;
+        });
+
+        y += recH + 5;
+      });
+
+      y += 4;
+
+      // ============================================================
+      // CTA BOX
+      // ============================================================
+      checkPage(22);
+      setFill('#F3EEFF');
+      setStroke('#C4B5FD');
+      doc.setLineWidth(0.4);
+      doc.roundedRect(ML, y, CW, 20, 2, 2, 'FD');
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      setTxt('#4C00FF');
+      doc.text('Scorecard Review  \u2014  No commitment required', ML + 5, y + 8);
+
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      setTxt('#5B21B6');
+      const ctaLines = doc.splitTextToSize('30-minute session with an engineer to walk through your results, prioritize gaps, and map a realistic remediation path. Free, no obligation.', CW - 10);
+      doc.text(ctaLines, ML + 5, y + 14);
+
+      y += 26;
+
+      // ============================================================
+      // FOOTER on every page
+      // ============================================================
+      const totalPages = doc.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        setFill('#F1F5F9');
+        doc.rect(0, PAGE_H - 10, W, 10, 'F');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(6.5);
+        setTxt('#94A3B8');
+        doc.text(
+          'Self-reported assessment aligned with CIS Benchmark and DISA STIG language. Does not constitute a formal audit or certification.',
+          ML, PAGE_H - 4
+        );
+        doc.text('Page ' + p + ' of ' + totalPages, W - MR, PAGE_H - 4, { align: 'right' });
+      }
+
+      doc.save('hardening-readiness-scorecard.pdf');
+      showToast('PDF downloaded successfully');
+
+    } catch(err) {
+      console.error('PDF generation error:', err);
+      showToast('PDF generation failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+      overlay.classList.remove('active');
+    }
+  }, 80);
+}
+
+// ===== MODALS =====
+function openSchedule() {
+  // Pre-fill from stored user info
+  document.getElementById('sched-name').value = localStorage.getItem('ha_name') || '';
+  document.getElementById('sched-email').value = localStorage.getItem('ha_email') || '';
+  document.getElementById('sched-company').value = localStorage.getItem('ha_company') || '';
+  document.getElementById('schedule-modal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function submitSchedule() {
+  const email = document.getElementById('sched-email').value.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email address', true);
+    return;
+  }
+  closeModal('schedule-modal');
+  showToast('Review request submitted — expect contact within 1 business day');
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#d4351c' : '#222222';
+  t.style.color = '#0a0f1e';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function restartAssessment() {
+  answers = {};
+  current = 0;
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('assessment-section').style.display = 'block';
+  document.getElementById('dl-bar').classList.remove('visible');
+  renderQuestion(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== USER INFO GATE =====
+function getUserParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    name: params.get('name') || '',
+    email: params.get('email') || '',
+    company: params.get('company') || ''
+  };
+}
+
+function hasRequiredUserInfo() {
+  const params = getUserParams();
+  // Also check localStorage as fallback
+  const lsEmail = localStorage.getItem('ha_email') || '';
+  return !!(params.email || lsEmail);
+}
+
+function loadUserInfoFromStorage() {
+  const nameEl = document.getElementById('gate-name');
+  const emailEl = document.getElementById('gate-email');
+  const companyEl = document.getElementById('gate-company');
+  // Pre-fill from localStorage if available
+  nameEl.value = localStorage.getItem('ha_name') || '';
+  emailEl.value = localStorage.getItem('ha_email') || '';
+  companyEl.value = localStorage.getItem('ha_company') || '';
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function submitUserInfo() {
+  const name = document.getElementById('gate-name').value.trim();
+  const email = document.getElementById('gate-email').value.trim();
+  const company = document.getElementById('gate-company').value.trim();
+  const errEl = document.getElementById('gate-error');
+
+  if (!name || !email) {
+    errEl.textContent = 'Name and work email are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!isValidEmail(email)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+
+  // Save to localStorage
+  localStorage.setItem('ha_name', name);
+  localStorage.setItem('ha_email', email);
+  localStorage.setItem('ha_company', company);
+
+  // Update URL query string without reload
+  const url = new URL(window.location);
+  url.searchParams.set('name', name);
+  url.searchParams.set('email', email);
+  if (company) url.searchParams.set('company', company);
+  window.history.replaceState({}, '', url);
+
+  // Close modal and show assessment
+  document.getElementById('user-info-modal').classList.remove('open');
+  document.querySelector('.container').style.display = '';
+}
+
+// Close modals on overlay click (but NOT the user-info gate modal)
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay && overlay.id !== 'user-info-modal') {
+      overlay.classList.remove('open');
+    }
+  });
+});
+
+// ===== INIT =====
+(function init() {
+  if (hasRequiredUserInfo()) {
+    // Ensure localStorage is populated from query params if present
+    const p = getUserParams();
+    if (p.email) {
+      localStorage.setItem('ha_email', p.email);
+      if (p.name) localStorage.setItem('ha_name', p.name);
+      if (p.company) localStorage.setItem('ha_company', p.company);
+    }
+    document.querySelector('.container').style.display = '';
+  } else {
+    // Hide the assessment, show the gate modal
+    document.querySelector('.container').style.display = 'none';
+    loadUserInfoFromStorage();
+    document.getElementById('user-info-modal').classList.add('open');
+  }
+  renderQuestion(0);
+})();
+</script>
+</body>
+</html>

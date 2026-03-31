@@ -1356,7 +1356,7 @@ function getGaps() {
   if (['No capability currently', 'Possible but would take significant effort'].includes(a.evidence))
     gaps.push('Inability to produce compliance evidence quickly will result in failed audits and unquantifiable regulatory exposure.');
 
-  while (gaps.length < 5) {
+  if (gaps.length < 5) {
     gaps.push('Formal hardening program documentation and ownership model not confirmed — a gap that compounds all technical controls deficiencies.');
   }
 
@@ -1378,7 +1378,7 @@ function getWins() {
   if (a.evidence !== 'Yes — automated reporting available')
     wins.push('Create a simple evidence collection runbook and assign ownership — even a manual checklist dramatically reduces time-to-evidence under audit pressure.');
 
-  while (wins.length < 3) {
+  if (wins.length < 3) {
     wins.push('Document your current hardening scope and ownership — foundational for any audit, vendor evaluation, or team onboarding effort.');
   }
 

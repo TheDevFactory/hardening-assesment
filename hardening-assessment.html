@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Marketo Forms 2.0 -->
+<script src="https://846-HEL-222.marketo.com/js/forms2/js/forms2.min.js"></script>
 <style>
   :root {
     --puppet-purple: #4C00FF;
@@ -1637,6 +1639,9 @@ function showResults() {
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.getElementById('dl-bar').classList.add('visible');
+
+  // Submit assessment results to Marketo
+  submitToMarketo({ includeResults: true });
 }
 
 // ===== PDF DOWNLOAD (pure jsPDF — no external canvas dependency) =====
@@ -2157,6 +2162,15 @@ function submitSchedule() {
     showToast('Please enter a valid email address', true);
     return;
   }
+
+  // Submit schedule request to Marketo with assessment results
+  submitToMarketo({
+    name: document.getElementById('sched-name').value.trim(),
+    email: email,
+    company: document.getElementById('sched-company').value.trim(),
+    includeResults: true
+  });
+
   closeModal('schedule-modal');
   showToast('Review request submitted — expect contact within 1 business day');
 }
@@ -2242,6 +2256,9 @@ function submitUserInfo() {
   if (company) url.searchParams.set('company', company);
   window.history.replaceState({}, '', url);
 
+  // Submit initial lead capture to Marketo (no results yet)
+  submitToMarketo({ name: name, email: email, company: company, includeResults: false });
+
   // Close modal and show assessment
   document.getElementById('user-info-modal').classList.remove('open');
   document.querySelector('.container').style.display = '';
@@ -2275,6 +2292,115 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   }
   renderQuestion(0);
 })();
+
+// ===== MARKETO FORMS 2.0 INTEGRATION =====
+// TODO: Replace these three values with your actual Marketo details
+const MARKETO_BASE_URL = '//846-HEL-222.marketo.com';  // e.g. //app-ab12.marketo.com
+const MARKETO_MUNCHKIN_ID = '846-HEL-222';          // e.g. 123-ABC-456
+const MARKETO_FORM_ID = 4617;                           // e.g. 1234
+
+let marketoFormReady = false;
+let marketoForm = null;
+
+// Load the hidden Marketo form once the library is available
+function initMarketoForm() {
+  if (typeof MktoForms2 === 'undefined') {
+    console.warn('Marketo Forms 2.0 library not loaded — submissions will be skipped.');
+    return;
+  }
+  console.info('[Marketo] Loading form — Base:', MARKETO_BASE_URL, 'Munchkin:', MARKETO_MUNCHKIN_ID, 'Form:', MARKETO_FORM_ID);
+  MktoForms2.loadForm(MARKETO_BASE_URL, MARKETO_MUNCHKIN_ID, MARKETO_FORM_ID, function(form) {
+    marketoForm = form;
+    marketoFormReady = true;
+    console.info('[Marketo] Form loaded successfully');
+    // Prevent the default Marketo thank-you page redirect
+    form.onSuccess(function() {
+      console.info('[Marketo] Submission succeeded');
+      return false;
+    });
+  });
+}
+
+// Split "Full Name" into firstName / lastName
+function splitName(fullName) {
+  const parts = (fullName || '').trim().split(/\s+/);
+  if (parts.length === 0) return { firstName: '', lastName: '' };
+  if (parts.length === 1) return { firstName: parts[0], lastName: '' };
+  return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
+}
+
+// Build the assessment results payload for formCustomE
+function buildAssessmentPayload() {
+  const score = computeScore();
+  const band = getBand(score);
+  const layers = getLayerScores();
+  const drift = getDrift();
+  const evid = getEvidence();
+  const gaps = getGaps();
+  const wins = getWins();
+  const puppetRecs = getPuppetRecs();
+
+  return JSON.stringify({
+    overallScore: score,
+    maturityBand: band.band,
+    layers: layers.map(function(l) { return { name: l.name, score: l.score }; }),
+    driftExposure: drift.val,
+    evidenceReadiness: evid.val,
+    gaps: gaps,
+    quickWins: wins,
+    puppetRecommendations: puppetRecs.map(function(r) { return r.title; }),
+    answers: answers,
+    completedAt: new Date().toISOString()
+  });
+}
+
+// Submit lead data to Marketo
+function submitToMarketo(opts) {
+  opts = opts || {};
+  var source = opts.includeResults ? 'results' : 'lead-capture';
+  console.info('[Marketo] Submission started — source:', source);
+  if (!marketoFormReady || !marketoForm) {
+    console.warn('[Marketo] Form not ready — submission skipped (source: ' + source + ')');
+    return;
+  }
+
+  var name = opts.name || localStorage.getItem('ha_name') || '';
+  var email = opts.email || localStorage.getItem('ha_email') || '';
+  var company = opts.company || localStorage.getItem('ha_company') || '';
+  var nameParts = splitName(name);
+  var country ='Unknown'; // Country is not collected in this flow, so we set it to 'Unknown' or you can
+
+  var payload = {
+    firstName: nameParts.firstName,
+    lastName: nameParts.lastName,
+    email: email,
+    company: company,
+    country: country,
+    utm_medium: 'assessment',
+    utm_source: 'hardening-readiness',
+    utm_campaign: '2026-hardening-assesment',
+    utm_content: opts.includeResults ? 'with-results' : 'lead-capture-only',
+    utm_term: band ? band.band : 'Unknown',
+    utm_ad_group: layers ? layers.map(l => l.name).join(';') : 'Unknown'  
+  };
+
+  // Include assessment results if available
+  if (opts.includeResults) {
+    payload.formCustomE = buildAssessmentPayload();
+  }
+
+  console.info('[Marketo] Submitting payload — source:', source, 'email:', email, 'hasResults:', !!opts.includeResults);
+  console.info('[Marketo] Payload:', JSON.stringify(payload, null, 2));
+  marketoForm.vals(payload);
+  marketoForm.submit();
+}
+
+// Initialize the Marketo form on page load
+if (document.readyState === 'complete') {
+  initMarketoForm();
+} else {
+  window.addEventListener('load', initMarketoForm);
+}
 </script>
 </body>
 </html>

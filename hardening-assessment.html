@@ -644,7 +644,7 @@
     margin-bottom: 7px;
   }
 
-  input[type="text"], input[type="email"] {
+  input[type="text"], input[type="email"], select {
     width: 100%;
     background: #f7f8fa;
     border: 1px solid var(--border);
@@ -655,9 +655,23 @@
     font-size: 14px;
     outline: none;
     transition: border-color 0.2s;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
   }
 
-  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(76,0,255,0.1); }
+  input[type="text"], input[type="email"] {
+    background-image: none;
+    cursor: text;
+  }
+
+  select option[value=""] { color: #9ca3af; }
+
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(76,0,255,0.1); }
   input::placeholder { color: #9ca3af; }
 
   .modal-actions {
@@ -1099,6 +1113,10 @@
       <label class="input-label">Company / Organization</label>
       <input type="text" id="sched-company" placeholder="Optional">
     </div>
+    <div class="input-group">
+      <label class="input-label">Country <span style="color:var(--red)">*</span></label>
+      <select id="sched-country"><option value="">Select country…</option></select>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="submitSchedule()">Request Review</button>
       <button class="btn btn-ghost" onclick="closeModal('schedule-modal')">Cancel</button>
@@ -1123,6 +1141,10 @@
       <label class="input-label">Company / Organization</label>
       <input type="text" id="gate-company" placeholder="Your company or organization">
     </div>
+    <div class="input-group">
+      <label class="input-label">Country <span style="color:var(--red)">*</span></label>
+      <select id="gate-country"><option value="">Select country…</option></select>
+    </div>
     <div id="gate-error" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none;"></div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="submitUserInfo()">Start Assessment →</button>
@@ -1133,6 +1155,119 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== COUNTRY LIST =====
+const COUNTRIES = [
+  "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria",
+  "Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan",
+  "Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia",
+  "Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo (DRC)","Congo (Republic)",
+  "Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador",
+  "Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France",
+  "Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau",
+  "Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland",
+  "Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kosovo",
+  "Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania",
+  "Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius",
+  "Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia",
+  "Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway",
+  "Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland",
+  "Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines",
+  "Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore",
+  "Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan",
+  "Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo",
+  "Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates",
+  "United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
+];
+document.querySelectorAll('#gate-country, #sched-country').forEach(function(sel) {
+  var prioritized = ["United States", "United Kingdom"];
+  prioritized.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+  // Separator
+  var sep = document.createElement('option');
+  sep.disabled = true;
+  sep.textContent = '────────────────';
+  sel.appendChild(sep);
+  COUNTRIES.forEach(function(c) {
+    if (prioritized.indexOf(c) !== -1) return;
+    var opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+});
+
+// Detect user's country from timezone and set as default
+(function detectCountry() {
+  // Skip if already stored in localStorage
+  if (localStorage.getItem('ha_country')) return;
+
+  var tzCountryMap = {
+    "Pacific/Pago_Pago":"American Samoa","Pacific/Midway":"American Samoa","America/New_York":"United States","America/Chicago":"United States",
+    "America/Denver":"United States","America/Los_Angeles":"United States","America/Anchorage":"United States","Pacific/Honolulu":"United States",
+    "America/Phoenix":"United States","America/Indiana/Indianapolis":"United States","America/Detroit":"United States","America/Boise":"United States",
+    "Europe/London":"United Kingdom","Europe/Belfast":"United Kingdom","Europe/Berlin":"Germany","Europe/Paris":"France",
+    "Europe/Madrid":"Spain","Europe/Rome":"Italy","Europe/Amsterdam":"Netherlands","Europe/Brussels":"Belgium",
+    "Europe/Vienna":"Austria","Europe/Zurich":"Switzerland","Europe/Stockholm":"Sweden","Europe/Oslo":"Norway",
+    "Europe/Copenhagen":"Denmark","Europe/Helsinki":"Finland","Europe/Warsaw":"Poland","Europe/Prague":"Czech Republic",
+    "Europe/Budapest":"Hungary","Europe/Bucharest":"Romania","Europe/Sofia":"Bulgaria","Europe/Athens":"Greece",
+    "Europe/Istanbul":"Turkey","Europe/Moscow":"Russia","Europe/Kiev":"Ukraine","Europe/Lisbon":"Portugal",
+    "Europe/Dublin":"Ireland","Europe/Belgrade":"Serbia","Europe/Zagreb":"Croatia","Europe/Bratislava":"Slovakia",
+    "Europe/Ljubljana":"Slovenia","Europe/Tallinn":"Estonia","Europe/Riga":"Latvia","Europe/Vilnius":"Lithuania",
+    "Europe/Minsk":"Belarus","Europe/Chisinau":"Moldova","Europe/Tirane":"Albania","Europe/Skopje":"North Macedonia",
+    "Europe/Podgorica":"Montenegro","Europe/Sarajevo":"Bosnia and Herzegovina","Europe/Luxembourg":"Luxembourg",
+    "Europe/Malta":"Malta","Europe/Monaco":"Monaco","Europe/Andorra":"Andorra","Europe/San_Marino":"San Marino",
+    "Europe/Vatican":"Vatican City","Asia/Tokyo":"Japan","Asia/Seoul":"South Korea","Asia/Shanghai":"China",
+    "Asia/Hong_Kong":"China","Asia/Taipei":"Taiwan","Asia/Singapore":"Singapore","Asia/Kolkata":"India",
+    "Asia/Calcutta":"India","Asia/Mumbai":"India","Asia/Karachi":"Pakistan","Asia/Dhaka":"Bangladesh",
+    "Asia/Bangkok":"Thailand","Asia/Jakarta":"Indonesia","Asia/Manila":"Philippines","Asia/Kuala_Lumpur":"Malaysia",
+    "Asia/Saigon":"Vietnam","Asia/Ho_Chi_Minh":"Vietnam","Asia/Yangon":"Myanmar","Asia/Colombo":"Sri Lanka",
+    "Asia/Kathmandu":"Nepal","Asia/Tashkent":"Uzbekistan","Asia/Almaty":"Kazakhstan","Asia/Bishkek":"Kyrgyzstan",
+    "Asia/Dushanbe":"Tajikistan","Asia/Ashgabat":"Turkmenistan","Asia/Baku":"Azerbaijan","Asia/Tbilisi":"Georgia",
+    "Asia/Yerevan":"Armenia","Asia/Dubai":"United Arab Emirates","Asia/Muscat":"Oman","Asia/Qatar":"Qatar",
+    "Asia/Bahrain":"Bahrain","Asia/Kuwait":"Kuwait","Asia/Riyadh":"Saudi Arabia","Asia/Baghdad":"Iraq",
+    "Asia/Tehran":"Iran","Asia/Kabul":"Afghanistan","Asia/Jerusalem":"Israel","Asia/Amman":"Jordan",
+    "Asia/Beirut":"Lebanon","Asia/Damascus":"Syria","Asia/Phnom_Penh":"Cambodia","Asia/Vientiane":"Laos",
+    "Asia/Ulaanbaatar":"Mongolia","Asia/Brunei":"Brunei","Asia/Pyongyang":"North Korea",
+    "Australia/Sydney":"Australia","Australia/Melbourne":"Australia","Australia/Brisbane":"Australia",
+    "Australia/Perth":"Australia","Australia/Adelaide":"Australia","Australia/Hobart":"Australia",
+    "Australia/Darwin":"Australia","Pacific/Auckland":"New Zealand","Pacific/Fiji":"Fiji",
+    "Africa/Cairo":"Egypt","Africa/Lagos":"Nigeria","Africa/Johannesburg":"South Africa",
+    "Africa/Nairobi":"Kenya","Africa/Casablanca":"Morocco","Africa/Algiers":"Algeria","Africa/Tunis":"Tunisia",
+    "Africa/Accra":"Ghana","Africa/Addis_Ababa":"Ethiopia","Africa/Dar_es_Salaam":"Tanzania",
+    "Africa/Kampala":"Uganda","Africa/Khartoum":"Sudan","Africa/Tripoli":"Libya","Africa/Maputo":"Mozambique",
+    "Africa/Lusaka":"Zambia","Africa/Harare":"Zimbabwe","Africa/Windhoek":"Namibia","Africa/Gaborone":"Botswana",
+    "Africa/Dakar":"Senegal","Africa/Abidjan":"Ivory Coast","Africa/Bamako":"Mali","Africa/Ouagadougou":"Burkina Faso",
+    "Africa/Kinshasa":"Congo (DRC)","Africa/Brazzaville":"Congo (Republic)","Africa/Douala":"Cameroon",
+    "Africa/Libreville":"Gabon","Africa/Luanda":"Angola",
+    "America/Toronto":"Canada","America/Vancouver":"Canada","America/Edmonton":"Canada","America/Winnipeg":"Canada",
+    "America/Halifax":"Canada","America/Montreal":"Canada","America/Mexico_City":"Mexico","America/Cancun":"Mexico",
+    "America/Bogota":"Colombia","America/Lima":"Peru","America/Santiago":"Chile","America/Buenos_Aires":"Argentina",
+    "America/Argentina/Buenos_Aires":"Argentina","America/Sao_Paulo":"Brazil","America/Caracas":"Venezuela",
+    "America/Guayaquil":"Ecuador","America/La_Paz":"Bolivia","America/Asuncion":"Paraguay",
+    "America/Montevideo":"Uruguay","America/Havana":"Cuba","America/Santo_Domingo":"Dominican Republic",
+    "America/Panama":"Panama","America/Costa_Rica":"Costa Rica","America/Guatemala":"Guatemala",
+    "America/Tegucigalpa":"Honduras","America/Managua":"Nicaragua","America/El_Salvador":"El Salvador",
+    "America/Jamaica":"Jamaica","America/Port-au-Prince":"Haiti","Atlantic/Reykjavik":"Iceland"
+  };
+
+  try {
+    var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    var detected = tzCountryMap[tz];
+    if (detected && COUNTRIES.indexOf(detected) !== -1) {
+      document.querySelectorAll('#gate-country, #sched-country').forEach(function(sel) {
+        sel.value = detected;
+      });
+      console.info('[Country] Auto-detected:', detected, '(from timezone:', tz + ')');
+    }
+  } catch(e) {
+    // Silent fail — user can still select manually
+  }
+})();
+
 // ===== QUESTIONS =====
 const questions = [
   {
@@ -2149,6 +2284,7 @@ function openSchedule() {
   document.getElementById('sched-name').value = localStorage.getItem('ha_name') || '';
   document.getElementById('sched-email').value = localStorage.getItem('ha_email') || '';
   document.getElementById('sched-company').value = localStorage.getItem('ha_company') || '';
+  document.getElementById('sched-country').value = localStorage.getItem('ha_country') || '';
   document.getElementById('schedule-modal').classList.add('open');
 }
 
@@ -2168,6 +2304,7 @@ function submitSchedule() {
     name: document.getElementById('sched-name').value.trim(),
     email: email,
     company: document.getElementById('sched-company').value.trim(),
+    country: document.getElementById('sched-country').value,
     includeResults: true
   });
 
@@ -2200,7 +2337,8 @@ function getUserParams() {
   return {
     name: params.get('name') || '',
     email: params.get('email') || '',
-    company: params.get('company') || ''
+    company: params.get('company') || '',
+    country: params.get('country') || ''
   };
 }
 
@@ -2212,13 +2350,10 @@ function hasRequiredUserInfo() {
 }
 
 function loadUserInfoFromStorage() {
-  const nameEl = document.getElementById('gate-name');
-  const emailEl = document.getElementById('gate-email');
-  const companyEl = document.getElementById('gate-company');
-  // Pre-fill from localStorage if available
-  nameEl.value = localStorage.getItem('ha_name') || '';
-  emailEl.value = localStorage.getItem('ha_email') || '';
-  companyEl.value = localStorage.getItem('ha_company') || '';
+  document.getElementById('gate-name').value = localStorage.getItem('ha_name') || '';
+  document.getElementById('gate-email').value = localStorage.getItem('ha_email') || '';
+  document.getElementById('gate-company').value = localStorage.getItem('ha_company') || '';
+  document.getElementById('gate-country').value = localStorage.getItem('ha_country') || '';
 }
 
 function isValidEmail(email) {
@@ -2229,10 +2364,11 @@ function submitUserInfo() {
   const name = document.getElementById('gate-name').value.trim();
   const email = document.getElementById('gate-email').value.trim();
   const company = document.getElementById('gate-company').value.trim();
+  const country = document.getElementById('gate-country').value;
   const errEl = document.getElementById('gate-error');
 
-  if (!name || !email) {
-    errEl.textContent = 'Name and work email are required.';
+  if (!name || !email || !country) {
+    errEl.textContent = 'Name, work email, and country are required.';
     errEl.style.display = 'block';
     return;
   }
@@ -2248,16 +2384,18 @@ function submitUserInfo() {
   localStorage.setItem('ha_name', name);
   localStorage.setItem('ha_email', email);
   localStorage.setItem('ha_company', company);
+  localStorage.setItem('ha_country', country);
 
   // Update URL query string without reload
   const url = new URL(window.location);
   url.searchParams.set('name', name);
   url.searchParams.set('email', email);
   if (company) url.searchParams.set('company', company);
+  if (country) url.searchParams.set('country', country);
   window.history.replaceState({}, '', url);
 
   // Submit initial lead capture to Marketo (no results yet)
-  submitToMarketo({ name: name, email: email, company: company, includeResults: false });
+  submitToMarketo({ name: name, email: email, company: company, country: country, includeResults: false });
 
   // Close modal and show assessment
   document.getElementById('user-info-modal').classList.remove('open');
@@ -2282,6 +2420,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
       localStorage.setItem('ha_email', p.email);
       if (p.name) localStorage.setItem('ha_name', p.name);
       if (p.company) localStorage.setItem('ha_company', p.company);
+      if (p.country) localStorage.setItem('ha_country', p.country);
     }
     document.querySelector('.container').style.display = '';
   } else {
@@ -2367,8 +2506,8 @@ function submitToMarketo(opts) {
   var name = opts.name || localStorage.getItem('ha_name') || '';
   var email = opts.email || localStorage.getItem('ha_email') || '';
   var company = opts.company || localStorage.getItem('ha_company') || '';
+  var country = opts.country || localStorage.getItem('ha_country') || '';
   var nameParts = splitName(name);
-  var country ='Unknown'; // Country is not collected in this flow, so we set it to 'Unknown' or you can
 
   var payload = {
     firstName: nameParts.firstName,

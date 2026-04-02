@@ -2519,8 +2519,8 @@ function submitToMarketo(opts) {
     utm_source: 'hardening-readiness',
     utm_campaign: '2026-hardening-assesment',
     utm_content: opts.includeResults ? 'with-results' : 'lead-capture-only',
-    utm_term: band ? band.band : 'Unknown',
-    utm_ad_group: layers ? layers.map(l => l.name).join(';') : 'Unknown'  
+    utm_term: opts.includeResults ? getBand(computeScore()).band : 'pre-assessment',
+    utm_ad_group: opts.includeResults ? getLayerScores().map(function(l) { return l.name; }).join(';') : 'pre-assessment'  
   };
 
   // Include assessment results if available

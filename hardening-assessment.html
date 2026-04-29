@@ -309,6 +309,7 @@
     border: none;
     transition: all 0.2s ease;
     letter-spacing: 0.02em;
+    text-decoration: none;
   }
 
   .btn-primary {
@@ -1105,7 +1106,7 @@
         <div class="cta-box-title">📅 Book a scorecard review</div>
         <div class="cta-box-sub">A free, no-obligation 30-minute session with an infrastructure hardening specialist focused on what to fix first and how.</div>
       </div>
-      <button class="btn btn-primary" onclick="openSchedule()">Book a Review →</button>
+      <a class="btn btn-primary" href="https://bookings.cloud.microsoft/book/SystemHardening@perforce.com/?ismsaljsauthenabled" target="_blank" rel="noopener noreferrer">Book a Review →</a>
     </div>
 
     <!-- Actions -->
@@ -1128,7 +1129,7 @@
       </svg>
       Download PDF Scorecard
     </button>
-    <button class="btn btn-primary" onclick="openSchedule()" style="padding:11px 20px;">Book a Review →</button>
+    <a class="btn btn-primary" href="https://bookings.cloud.microsoft/book/SystemHardening@perforce.com/?ismsaljsauthenabled" target="_blank" rel="noopener noreferrer" style="padding:11px 20px;">Book a Review →</a>
   </div>
 </div>
 
@@ -1136,34 +1137,6 @@
 <div class="pdf-overlay" id="pdf-overlay">
   <div class="pdf-spinner"></div>
   <div class="pdf-overlay-text" id="pdf-overlay-text">Building your scorecard…</div>
-</div>
-
-<!-- SCHEDULE MODAL -->
-<div class="modal-overlay" id="schedule-modal">
-  <div class="modal">
-    <h3>Book Your Scorecard Review</h3>
-    <p>Enter your details and an engineer will reach out within one business day to schedule a 30-minute walkthrough.</p>
-    <div class="input-group">
-      <label class="input-label">Name</label>
-      <input type="text" id="sched-name" placeholder="Your name">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Work Email</label>
-      <input type="email" id="sched-email" placeholder="you@company.com">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Company / Organization</label>
-      <input type="text" id="sched-company" placeholder="Optional">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Country <span style="color:var(--red)">*</span></label>
-      <select id="sched-country"><option value="">Select country…</option></select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-primary" onclick="submitSchedule()">Request Review</button>
-      <button class="btn btn-ghost" onclick="closeModal('schedule-modal')">Cancel</button>
-    </div>
-  </div>
 </div>
 
 <!-- USER INFO GATE MODAL -->
@@ -1220,7 +1193,7 @@ const COUNTRIES = [
   "Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates",
   "United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
 ];
-document.querySelectorAll('#gate-country, #sched-country').forEach(function(sel) {
+document.querySelectorAll('#gate-country').forEach(function(sel) {
   var prioritized = ["United States", "United Kingdom"];
   prioritized.forEach(function(c) {
     var opt = document.createElement('option');
@@ -1300,7 +1273,7 @@ document.querySelectorAll('#gate-country, #sched-country').forEach(function(sel)
     var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     var detected = tzCountryMap[tz];
     if (detected && COUNTRIES.indexOf(detected) !== -1) {
-      document.querySelectorAll('#gate-country, #sched-country').forEach(function(sel) {
+      document.querySelectorAll('#gate-country').forEach(function(sel) {
         sel.value = detected;
       });
       console.info('[Country] Auto-detected:', detected, '(from timezone:', tz + ')');
@@ -2356,24 +2329,35 @@ function downloadPDF() {
       // ============================================================
       // CTA BOX
       // ============================================================
-      checkPage(22);
+      const bookingUrl = 'https://bookings.cloud.microsoft/book/SystemHardening@perforce.com/?ismsaljsauthenabled';
+      const ctaH = 28;
+      checkPage(ctaH + 2);
       setFill('#F3EEFF');
       setStroke('#C4B5FD');
       doc.setLineWidth(0.4);
-      doc.roundedRect(ML, y, CW, 20, 2, 2, 'FD');
+      doc.roundedRect(ML, y, CW, ctaH, 2, 2, 'FD');
 
       doc.setFont('helvetica','bold');
       doc.setFontSize(10);
       setTxt('#4C00FF');
-      doc.text('Scorecard Review  \u2014  No commitment required', ML + 5, y + 8);
+      doc.text('Scorecard Review  \u2014  No commitment required', ML + 5, y + 7);
 
       doc.setFont('helvetica','normal');
       doc.setFontSize(8);
       setTxt('#5B21B6');
       const ctaLines = doc.splitTextToSize('30-minute session with an engineer to walk through your results, prioritize gaps, and map a realistic remediation path. Free, no obligation.', CW - 10);
-      doc.text(ctaLines, ML + 5, y + 14);
+      doc.text(ctaLines, ML + 5, y + 13);
 
-      y += 26;
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      setTxt('#4C00FF');
+      const linkLabel = 'Book a Review \u2192';
+      const linkY = y + ctaH - 4;
+      doc.textWithLink(linkLabel, ML + 5, linkY, { url: bookingUrl });
+      // Make the entire CTA box clickable as well
+      doc.link(ML, y, CW, ctaH, { url: bookingUrl });
+
+      y += ctaH + 6;
 
       // ============================================================
       // FOOTER on every page
@@ -2407,39 +2391,6 @@ function downloadPDF() {
   });
 }
 
-// ===== MODALS =====
-function openSchedule() {
-  // Pre-fill from stored user info
-  document.getElementById('sched-name').value = localStorage.getItem('ha_name') || '';
-  document.getElementById('sched-email').value = localStorage.getItem('ha_email') || '';
-  document.getElementById('sched-company').value = localStorage.getItem('ha_company') || '';
-  document.getElementById('sched-country').value = localStorage.getItem('ha_country') || '';
-  document.getElementById('schedule-modal').classList.add('open');
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
-function submitSchedule() {
-  const email = document.getElementById('sched-email').value.trim();
-  if (!email || !email.includes('@')) {
-    showToast('Please enter a valid email address', true);
-    return;
-  }
-
-  // Submit schedule request to Marketo with assessment results
-  submitToMarketo({
-    name: document.getElementById('sched-name').value.trim(),
-    email: email,
-    company: document.getElementById('sched-company').value.trim(),
-    country: document.getElementById('sched-country').value,
-    includeResults: true
-  });
-
-  closeModal('schedule-modal');
-  showToast('Review request submitted — expect contact within 1 business day');
-}
 
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');

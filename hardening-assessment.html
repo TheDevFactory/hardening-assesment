@@ -57,7 +57,7 @@
     position: fixed;
     top: 18px;
     left: 20px;
-    height: 22px;
+    height: 44px;
     width: auto;
     z-index: 101;
     opacity: 0.85;
@@ -68,7 +68,7 @@
     .puppet-logo {
       top: 14px;
       left: 14px;
-      height: 18px;
+      height: 36px;
     }
   }
 
@@ -1026,7 +1026,6 @@
   <div id="results-section">
     <div class="results-header">
       <div class="header-badge">Your Scorecard</div>
-      <h1>Hardening Readiness<br><span>Report</span></h1>
       <div class="results-disclaimer">
         <strong>Informational Assessment Only:</strong> Scores and recommendations are based on self-reported responses and do not constitute a formal audit, certification, or compliance determination.
       </div>
@@ -2351,7 +2350,7 @@ function downloadPDF() {
       doc.setFont('helvetica','bold');
       doc.setFontSize(8);
       setTxt('#4C00FF');
-      const linkLabel = 'Book a Review \u2192';
+      const linkLabel = 'Book a Review';
       const linkY = y + ctaH - 4;
       doc.textWithLink(linkLabel, ML + 5, linkY, { url: bookingUrl });
       // Make the entire CTA box clickable as well

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>System Hardening Readiness Assessment</title>
+<title>System Hardening Readiness Report by Puppet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -348,6 +348,24 @@
   .results-header {
     text-align: center;
     margin-bottom: 40px;
+  }
+
+  .results-disclaimer {
+    max-width: 680px;
+    margin: 16px auto 0;
+    padding: 10px 14px;
+    background: #f7f8fa;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  .results-disclaimer strong {
+    color: var(--label);
+    font-weight: 600;
   }
 
   .score-ring-wrap {
@@ -970,7 +988,7 @@
   <!-- HEADER -->
   <div class="header">
     <div class="header-badge">System Security Assessment</div>
-    <h1>System Hardening<br><span>Readiness Assessment</span></h1>
+    <h1>System Hardening<br><span>Readiness Report by Puppet</span></h1>
     <p class="header-sub">Evaluate your configuration baseline practices against CIS Benchmark and DISA STIG alignment principles — no certification claims, just honest signal.</p>
     <div class="header-meta">
       <span class="header-meta-item">⏱ <strong>3–5 min</strong> · 10 questions</span>
@@ -1008,6 +1026,9 @@
     <div class="results-header">
       <div class="header-badge">Your Scorecard</div>
       <h1>Hardening Readiness<br><span>Report</span></h1>
+      <div class="results-disclaimer">
+        <strong>Informational Assessment Only:</strong> Scores and recommendations are based on self-reported responses and do not constitute a formal audit, certification, or compliance determination.
+      </div>
     </div>
 
     <!-- Overall score -->
@@ -1801,6 +1822,46 @@ function showResults() {
 }
 
 // ===== PDF DOWNLOAD (pure jsPDF — no external canvas dependency) =====
+function loadPuppetLogoForPDF() {
+  const url = 'https://www.puppet.com/sites/default/files/logo-puppet-reg_0.svg';
+  return fetch(url)
+    .then(function(r) { return r.ok ? r.text() : Promise.reject(new Error('fetch failed')); })
+    .then(function(svgText) {
+      return new Promise(function(resolve, reject) {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgEl = svgDoc.documentElement;
+        let aspect = 5;
+        const vb = svgEl.getAttribute('viewBox');
+        if (vb) {
+          const parts = vb.split(/[\s,]+/).map(Number);
+          if (parts.length === 4 && parts[3] > 0) aspect = parts[2] / parts[3];
+        }
+        const Wpx = 800, Hpx = Math.max(1, Math.round(Wpx / aspect));
+        svgEl.setAttribute('width', Wpx);
+        svgEl.setAttribute('height', Hpx);
+        const finalSvg = new XMLSerializer().serializeToString(svgEl);
+        const blob = new Blob([finalSvg], { type: 'image/svg+xml;charset=utf-8' });
+        const objUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = Wpx;
+          canvas.height = Hpx;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, Wpx, Hpx);
+          URL.revokeObjectURL(objUrl);
+          try {
+            resolve({ dataUrl: canvas.toDataURL('image/png'), aspect: Wpx / Hpx });
+          } catch (e) { reject(e); }
+        };
+        img.onerror = function() { URL.revokeObjectURL(objUrl); reject(new Error('image load failed')); };
+        img.src = objUrl;
+      });
+    })
+    .catch(function() { return null; });
+}
+
 function downloadPDF() {
   const btn = document.getElementById('dl-btn');
   const overlay = document.getElementById('pdf-overlay');
@@ -1810,6 +1871,7 @@ function downloadPDF() {
   overlay.classList.add('active');
   overlayText.textContent = 'Building your scorecard...';
 
+  loadPuppetLogoForPDF().then(function(puppetLogo) {
   // Use setTimeout so the overlay renders before we block the thread
   setTimeout(function() {
     try {
@@ -1894,17 +1956,60 @@ function downloadPDF() {
       setTxt('#8B5CF6');
       doc.text('SYSTEM SECURITY ASSESSMENT  ·  HARDENING READINESS SCORECARD', ML, 10);
 
+      // Subtle Puppet logo on a light chip, top-right of header
+      if (puppetLogo) {
+        const logoW = 22;
+        const logoH = logoW / puppetLogo.aspect;
+        const padX = 2.5, padY = 1.5;
+        const chipW = logoW + padX * 2;
+        const chipH = logoH + padY * 2;
+        const chipX = W - MR - chipW;
+        const chipY = (30 - chipH) / 2;
+        try {
+          setFill('#FFFFFF');
+          doc.roundedRect(chipX, chipY, chipW, chipH, 1.2, 1.2, 'F');
+          doc.addImage(puppetLogo.dataUrl, 'PNG', chipX + padX, chipY + padY, logoW, logoH);
+        } catch (e) { /* ignore — proceed without logo */ }
+      }
+
       doc.setFont('helvetica','bold');
       doc.setFontSize(14);
       setTxt('#FFFFFF');
-      doc.text('System Hardening Readiness Report', ML, 19);
+      doc.text('Systems Hardening Readiness Report by Puppet', ML, 19);
 
       doc.setFont('helvetica','normal');
       doc.setFontSize(8);
       setTxt('#94A3B8');
       doc.text('Generated ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) + '   ·   CIS Benchmarks  ·  DISA STIGs', ML, 26);
 
-      y = 38;
+      y = 35;
+
+      // ---- Legal disclaimer (informational assessment) ----
+      const disclaimerLead = 'Informational Assessment Only:';
+      const disclaimerBody = ' Scores and recommendations are based on self-reported responses and do not constitute a formal audit, certification, or compliance determination.';
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica','bold');
+      const leadW = doc.getTextWidth(disclaimerLead);
+      doc.setFont('helvetica','normal');
+      const firstLineBody = doc.splitTextToSize(disclaimerBody, CW - 8 - leadW)[0] || '';
+      const remaining = disclaimerBody.slice(firstLineBody.length).trimStart();
+      const restLines = remaining ? doc.splitTextToSize(remaining, CW - 8) : [];
+      const totalLines = 1 + restLines.length;
+      const discH = 5 + totalLines * 3.4;
+      setFill('#F7F8FA');
+      setStroke('#E0E4EA');
+      doc.setLineWidth(0.2);
+      doc.roundedRect(ML, y, CW, discH, 1.5, 1.5, 'FD');
+      doc.setFont('helvetica','bold');
+      setTxt('#374151');
+      doc.text(disclaimerLead, ML + 4, y + 4.4);
+      doc.setFont('helvetica','normal');
+      setTxt('#6B7280');
+      doc.text(firstLineBody, ML + 4 + leadW, y + 4.4);
+      if (restLines.length) {
+        doc.text(restLines, ML + 4, y + 4.4 + 3.4);
+      }
+      y += discH + 4;
 
       // ---- Overall score block ----
       const bandColors = { Continuous:'#16A34A', Managed:'#4C00FF', Developing:'#D97706', Foundational:'#DC2626' };
@@ -1922,12 +2027,14 @@ function downloadPDF() {
       doc.setFont('helvetica','bold');
       doc.setFontSize(34);
       setTxt(bColor);
-      doc.text(String(score), ML + 6, y + 22);
+      const scoreStr = String(score);
+      doc.text(scoreStr, ML + 6, y + 22);
+      const scoreWidth = doc.getTextWidth(scoreStr);
 
       doc.setFont('helvetica','normal');
       doc.setFontSize(9);
       setTxt('#6B7280');
-      doc.text('/ 100', ML + 6 + doc.getTextWidth(String(score)) + 2, y + 22);
+      doc.text('/ 100', ML + 6 + scoreWidth + 2, y + 22);
 
       // Score ring — draw a simple arc using lines (jsPDF arc)
       const cx = ML + 54, cy = y + 17, radius = 12;
@@ -2297,6 +2404,7 @@ function downloadPDF() {
       overlay.classList.remove('active');
     }
   }, 80);
+  });
 }
 
 // ===== MODALS =====

@@ -1075,7 +1075,7 @@
 
     <!-- Gaps -->
     <div class="card" style="margin-bottom:20px;">
-      <div class="section-title">Top 5 Prioritized Gaps</div>
+      <div class="section-title">Top Prioritized Gaps</div>
       <ul class="gaps-list" id="gaps-list"></ul>
     </div>
 
@@ -1102,8 +1102,8 @@
     <!-- CTA -->
     <div class="cta-box">
       <div class="cta-box-text">
-        <div class="cta-box-title">📅 Scorecard Review — No commitment required</div>
-        <div class="cta-box-sub">A 30-minute session with an engineer to walk through your results, prioritize gaps, and map a realistic remediation path. Free, no obligation.</div>
+        <div class="cta-box-title">📅 Book a scorecard review</div>
+        <div class="cta-box-sub">A free, no-obligation 30-minute session with an infrastructure hardening specialist focused on what to fix first and how.</div>
       </div>
       <button class="btn btn-primary" onclick="openSchedule()">Book a Review →</button>
     </div>
@@ -1454,7 +1454,7 @@ function computeScore() {
 
 function getBand(score) {
   if (score >= 80) return { band: 'Continuous', color: '#00a870', desc: 'Your organization demonstrates mature, automated hardening practices aligned with leading benchmarks. Focus is on optimization and continuous improvement.' };
-  if (score >= 60) return { band: 'Managed', color: '#4C00FF', desc: 'Solid hardening foundations are in place with structured processes. Key gaps remain around automation and evidence readiness.' };
+  if (score >= 60) return { band: 'Managed', color: '#4C00FF', desc: 'A structured hardening foundation is in place, but manual processes introduce drift windows and make audit readiness harder to sustain at scale.' };
   if (score >= 35) return { band: 'Developing', color: '#d97706', desc: 'Baseline controls exist but coverage is inconsistent. Significant opportunities to reduce drift exposure and improve auditability.' };
   return { band: 'Foundational', color: '#d4351c', desc: 'Critical hardening controls are missing or ad-hoc. Immediate action recommended to establish configuration baselines and drift detection.' };
 }
@@ -2150,7 +2150,7 @@ function downloadPDF() {
       // ============================================================
       // GAPS
       // ============================================================
-      sectionHeading('Top 5 Prioritized Gaps');
+      sectionHeading('Top Prioritized Gaps');
       gaps.forEach(function(g, i) {
         const lines = doc.splitTextToSize(g, CW - 16);
         const boxH = lines.length * 4.8 + 8;

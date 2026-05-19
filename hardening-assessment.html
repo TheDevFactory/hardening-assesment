@@ -19,7 +19,7 @@
       sessionSampleRate: 1 ,
       identityPoolId: "us-east-1:337b1c10-e31d-4282-b30b-73323487f46b" ,
       endpoint: "https://dataplane.rum.us-east-1.amazonaws.com" ,
-      telemetries: ["performance","errors","http"] ,
+      telemetries: ["performance","errors","http","custom_events"] ,
       allowCookies: true ,
       enableXRay: true ,
       signing: true // If you have a public resource policy and wish to send unsigned requests please set this to false
@@ -1189,6 +1189,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
+function rumEvent(type, payload) {
+  if (typeof cwr === 'function') cwr('recordEvent', { type: type, data: payload || {} });
+}
+
 // ===== COUNTRY LIST =====
 const COUNTRIES = [
   "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria",
@@ -1408,6 +1412,7 @@ function renderQuestion(idx) {
 }
 
 function selectOption(qid, val, el) {
+  rumEvent('answer_selected', { questionId: qid, questionIndex: current, optionValue: val });
   answers[qid] = val;
   document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
@@ -1422,8 +1427,10 @@ function updateProgress(idx) {
 }
 
 function goNext() {
+  const from = current;
   if (current < questions.length - 1) {
     current++;
+    rumEvent('nav_next', { fromQuestion: from, toQuestion: current });
     renderQuestion(current);
   } else {
     showResults();
@@ -1431,7 +1438,12 @@ function goNext() {
 }
 
 function goBack() {
-  if (current > 0) { current--; renderQuestion(current); }
+  if (current > 0) {
+    const from = current;
+    current--;
+    rumEvent('nav_back', { fromQuestion: from, toQuestion: current });
+    renderQuestion(current);
+  }
 }
 
 // ===== COMPUTE SCORE =====
@@ -1723,6 +1735,14 @@ function showResults() {
   const gaps   = getGaps();
   const wins   = getWins();
 
+  rumEvent('results_viewed', {
+    score,
+    maturityBand: band.band,
+    driftExposure: drift.val,
+    evidenceReadiness: evid.val,
+    layerScores: layers.map(l => ({ name: l.name, score: l.score }))
+  });
+
   // Score ring animation
   setTimeout(() => {
     let n = 0;
@@ -1855,6 +1875,8 @@ function loadPuppetLogoForPDF() {
 }
 
 function downloadPDF() {
+  const _s = computeScore();
+  rumEvent('pdf_downloaded', { score: _s, maturityBand: getBand(_s).band });
   const btn = document.getElementById('dl-btn');
   const overlay = document.getElementById('pdf-overlay');
   const overlayText = document.getElementById('pdf-overlay-text');
@@ -2421,6 +2443,7 @@ function showToast(msg, isError = false) {
 }
 
 function restartAssessment() {
+  rumEvent('assessment_restarted', {});
   answers = {};
   current = 0;
   document.getElementById('results-section').style.display = 'none';
@@ -2478,6 +2501,7 @@ function submitUserInfo() {
   }
 
   errEl.style.display = 'none';
+  rumEvent('assessment_started', { company, country });
 
   // Save to localStorage
   localStorage.setItem('ha_name', name);

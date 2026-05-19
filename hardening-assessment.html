@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
   (function(n,i,v,r,s,c,x,z){x=window.AwsRumClient={q:[],n:n,i:i,v:v,r:r,c:c};window[n]=function(c,p){x.q.push({c:c,p:p});};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.head.getElementsByTagName('script')[0]);})(
     'cwr',
@@ -16,6 +17,7 @@
     'https://client.rum.us-east-1.amazonaws.com/1.19.0/cwr.js',
     {
       sessionSampleRate: 1 ,
+      identityPoolId: "us-east-1:337b1c10-e31d-4282-b30b-73323487f46b" ,
       endpoint: "https://dataplane.rum.us-east-1.amazonaws.com" ,
       telemetries: ["performance","errors","http"] ,
       allowCookies: true ,
@@ -24,6 +26,7 @@
     }
   );
 </script>
+  
 <!-- Marketo Forms 2.0 -->
 <script src="https://resources.perforce.com/js/forms2/js/forms2.min.js"></script>
 <style>

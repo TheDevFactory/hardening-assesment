@@ -1014,7 +1014,7 @@
     <div class="header-meta">
       <span class="header-meta-item">⏱ <strong>3–5 min</strong> · 10 questions</span>
       <span class="header-meta-item">📋 Instant scorecard</span>
-      <span class="header-meta-item">🔒 No data stored</span>
+      <span class="header-meta-item">🔒 Stored only in your browser session</span>
     </div>
   </div>
 
@@ -1240,8 +1240,8 @@ document.querySelectorAll('#gate-country').forEach(function(sel) {
 
 // Detect user's country from timezone and set as default
 (function detectCountry() {
-  // Skip if already stored in localStorage
-  if (localStorage.getItem('ha_country')) return;
+  // Skip if already stored in sessionStorage
+  if (sessionStorage.getItem('ha_country')) return;
 
   var tzCountryMap = {
     "Pacific/Pago_Pago":"American Samoa","Pacific/Midway":"American Samoa","America/New_York":"United States","America/Chicago":"United States",
@@ -2454,28 +2454,15 @@ function restartAssessment() {
 }
 
 // ===== USER INFO GATE =====
-function getUserParams() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    name: params.get('name') || '',
-    email: params.get('email') || '',
-    company: params.get('company') || '',
-    country: params.get('country') || ''
-  };
-}
-
 function hasRequiredUserInfo() {
-  const params = getUserParams();
-  // Also check localStorage as fallback
-  const lsEmail = localStorage.getItem('ha_email') || '';
-  return !!(params.email || lsEmail);
+  return !!(sessionStorage.getItem('ha_email'));
 }
 
 function loadUserInfoFromStorage() {
-  document.getElementById('gate-name').value = localStorage.getItem('ha_name') || '';
-  document.getElementById('gate-email').value = localStorage.getItem('ha_email') || '';
-  document.getElementById('gate-company').value = localStorage.getItem('ha_company') || '';
-  document.getElementById('gate-country').value = localStorage.getItem('ha_country') || '';
+  document.getElementById('gate-name').value = sessionStorage.getItem('ha_name') || '';
+  document.getElementById('gate-email').value = sessionStorage.getItem('ha_email') || '';
+  document.getElementById('gate-company').value = sessionStorage.getItem('ha_company') || '';
+  document.getElementById('gate-country').value = sessionStorage.getItem('ha_country') || '';
 }
 
 function isValidEmail(email) {
@@ -2503,19 +2490,11 @@ function submitUserInfo() {
   errEl.style.display = 'none';
   rumEvent('assessment_started', { company, country });
 
-  // Save to localStorage
-  localStorage.setItem('ha_name', name);
-  localStorage.setItem('ha_email', email);
-  localStorage.setItem('ha_company', company);
-  localStorage.setItem('ha_country', country);
-
-  // Update URL query string without reload
-  const url = new URL(window.location);
-  url.searchParams.set('name', name);
-  url.searchParams.set('email', email);
-  if (company) url.searchParams.set('company', company);
-  if (country) url.searchParams.set('country', country);
-  window.history.replaceState({}, '', url);
+  // Save to sessionStorage (never written to the URL)
+  sessionStorage.setItem('ha_name', name);
+  sessionStorage.setItem('ha_email', email);
+  sessionStorage.setItem('ha_company', company);
+  sessionStorage.setItem('ha_country', country);
 
   // Submit initial lead capture to Marketo (no results yet)
   submitToMarketo({ name: name, email: email, company: company, country: country, includeResults: false });
@@ -2536,15 +2515,20 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 // ===== INIT =====
 (function init() {
+  // Strip any PII params from the URL immediately — before RUM or other analytics
+  // capture window.location. These params should no longer be present but clean up
+  // any legacy links that may still carry them.
+  (function stripPiiFromUrl() {
+    const piiParams = ['name', 'email', 'company', 'country'];
+    const url = new URL(window.location);
+    let changed = false;
+    piiParams.forEach(function(p) {
+      if (url.searchParams.has(p)) { url.searchParams.delete(p); changed = true; }
+    });
+    if (changed) history.replaceState({}, '', url);
+  })();
+
   if (hasRequiredUserInfo()) {
-    // Ensure localStorage is populated from query params if present
-    const p = getUserParams();
-    if (p.email) {
-      localStorage.setItem('ha_email', p.email);
-      if (p.name) localStorage.setItem('ha_name', p.name);
-      if (p.company) localStorage.setItem('ha_company', p.company);
-      if (p.country) localStorage.setItem('ha_country', p.country);
-    }
     document.querySelector('.container').style.display = '';
   } else {
     // Hide the assessment, show the gate modal
@@ -2626,10 +2610,10 @@ function submitToMarketo(opts) {
     return;
   }
 
-  var name = opts.name || localStorage.getItem('ha_name') || '';
-  var email = opts.email || localStorage.getItem('ha_email') || '';
-  var company = opts.company || localStorage.getItem('ha_company') || '';
-  var country = opts.country || localStorage.getItem('ha_country') || '';
+  var name = opts.name || sessionStorage.getItem('ha_name') || '';
+  var email = opts.email || sessionStorage.getItem('ha_email') || '';
+  var company = opts.company || sessionStorage.getItem('ha_company') || '';
+  var country = opts.country || sessionStorage.getItem('ha_country') || '';
   var nameParts = splitName(name);
 
   var payload = {

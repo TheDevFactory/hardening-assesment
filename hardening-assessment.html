@@ -746,6 +746,50 @@ function OptanonWrapper() { }
     flex-wrap: wrap;
   }
 
+  /* Marketing-consent checkbox + privacy notice inside the gate modal. */
+  .consent-group {
+    margin: 4px 0;
+    padding-top: 4px;
+  }
+
+  .consent-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .consent-checkbox {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .consent-label {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--label);
+  }
+
+  .privacy-notice {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .consent-link {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .consent-link:hover { color: var(--puppet-purple-dark); }
+
   .toast {
     position: fixed;
     bottom: 32px; left: 50%;
@@ -1187,6 +1231,13 @@ function OptanonWrapper() { }
       <select id="gate-country"><option value="">Select country…</option></select>
     </div>
     <div id="gate-error" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none;"></div>
+    <div class="consent-group">
+      <label class="consent-row">
+        <input type="checkbox" id="gate-consent" class="consent-checkbox">
+        <span class="consent-label">I agree to receive email communications from Perforce, and I understand I can manage my preferences or opt out at any time.</span>
+      </label>
+      <p class="privacy-notice">Perforce will use your contact information in accordance with our <a href="https://www.perforce.com/privacy-policy" target="_blank" rel="noopener noreferrer" class="consent-link">privacy policy</a>.</p>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="submitUserInfo()">Start Assessment →</button>
     </div>
@@ -2470,6 +2521,7 @@ function loadUserInfoFromStorage() {
   document.getElementById('gate-email').value = sessionStorage.getItem('ha_email') || '';
   document.getElementById('gate-company').value = sessionStorage.getItem('ha_company') || '';
   document.getElementById('gate-country').value = sessionStorage.getItem('ha_country') || '';
+  document.getElementById('gate-consent').checked = sessionStorage.getItem('ha_consent') === 'true';
 }
 
 function isValidEmail(email) {
@@ -2481,6 +2533,7 @@ function submitUserInfo() {
   const email = document.getElementById('gate-email').value.trim();
   const company = document.getElementById('gate-company').value.trim();
   const country = document.getElementById('gate-country').value;
+  const consent = document.getElementById('gate-consent').checked;
   const errEl = document.getElementById('gate-error');
 
   if (!name || !email || !country) {
@@ -2495,16 +2548,17 @@ function submitUserInfo() {
   }
 
   errEl.style.display = 'none';
-  rumEvent('assessment_started', { company, country });
+  rumEvent('assessment_started', { company, country, consent });
 
   // Save to sessionStorage (never written to the URL)
   sessionStorage.setItem('ha_name', name);
   sessionStorage.setItem('ha_email', email);
   sessionStorage.setItem('ha_company', company);
   sessionStorage.setItem('ha_country', country);
+  sessionStorage.setItem('ha_consent', consent ? 'true' : 'false');
 
   // Submit initial lead capture to Marketo (no results yet)
-  submitToMarketo({ name: name, email: email, company: company, country: country, includeResults: false });
+  submitToMarketo({ name: name, email: email, company: company, country: country, consent: consent, includeResults: false });
 
   // Close modal and show assessment
   document.getElementById('user-info-modal').classList.remove('open');
@@ -2603,6 +2657,7 @@ function buildAssessmentPayload() {
     quickWins: wins,
     puppetRecommendations: puppetRecs.map(function(r) { return r.title; }),
     answers: answers,
+    consent: sessionStorage.getItem('ha_consent') === 'true',
     completedAt: new Date().toISOString()
   });
 }
@@ -2621,6 +2676,7 @@ function submitToMarketo(opts) {
   var email = opts.email || sessionStorage.getItem('ha_email') || '';
   var company = opts.company || sessionStorage.getItem('ha_company') || '';
   var country = opts.country || sessionStorage.getItem('ha_country') || '';
+  var consent = (typeof opts.consent === 'boolean') ? opts.consent : (sessionStorage.getItem('ha_consent') === 'true');
   var nameParts = splitName(name);
 
   var payload = {
@@ -2629,12 +2685,13 @@ function submitToMarketo(opts) {
     Email: email,
     Company: company,
     Country: country,
+    MarketingOptIn: consent,
     utm_medium: 'assessment',
     utm_source: 'hardening-readiness',
     utm_campaign: '2026-hardening-assesment',
     utm_content: opts.includeResults ? 'with-results' : 'lead-capture-only',
     utm_term: opts.includeResults ? getBand(computeScore()).band : 'pre-assessment',
-    utm_ad_group: opts.includeResults ? getLayerScores().map(function(l) { return l.name; }).join(';') : 'pre-assessment'  
+    utm_ad_group: opts.includeResults ? getLayerScores().map(function(l) { return l.name; }).join(';') : 'pre-assessment'
   };
 
   // Include assessment results if available

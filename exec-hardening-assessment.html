@@ -1398,20 +1398,28 @@ function OptanonWrapper() { }
     <h3>Before We Begin</h3>
     <p>Please provide your details so we can personalise your assessment results and follow up with tailored recommendations.</p>
     <div class="input-group">
-      <label class="input-label">Name <span style="color:var(--red)">*</span></label>
-      <input type="text" id="gate-name" placeholder="Your full name">
+      <label class="input-label">First Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="gate-firstname" placeholder="Your first name">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Last Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="gate-lastname" placeholder="Your last name">
     </div>
     <div class="input-group">
       <label class="input-label">Work Email <span style="color:var(--red)">*</span></label>
       <input type="email" id="gate-email" placeholder="you@company.com">
     </div>
     <div class="input-group">
-      <label class="input-label">Company / Organization</label>
+      <label class="input-label">Company / Organization <span style="color:var(--red)">*</span></label>
       <input type="text" id="gate-company" placeholder="Your company or organization">
     </div>
     <div class="input-group">
       <label class="input-label">Country <span style="color:var(--red)">*</span></label>
       <select id="gate-country"><option value="">Select country…</option></select>
+    </div>
+    <div class="input-group" id="gate-state-group" style="display:none;">
+      <label class="input-label">State <span style="color:var(--red)">*</span></label>
+      <select id="gate-state"><option value="">Select state…</option></select>
     </div>
     <div id="gate-error" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none;"></div>
     <div class="consent-group">
@@ -1434,29 +1442,85 @@ function rumEvent(type, payload) {
   if (typeof cwr === 'function') cwr('recordEvent', { type: type, data: payload || {} });
 }
 
-// ===== COUNTRY LIST =====
+// ===== COUNTRY LIST ===== (Marketo picklist values — must match exactly)
 const COUNTRIES = [
-  "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria",
-  "Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan",
-  "Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia",
-  "Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo (DRC)","Congo (Republic)",
-  "Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador",
-  "Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France",
-  "Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau",
-  "Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland",
-  "Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kosovo",
-  "Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania",
-  "Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius",
-  "Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia",
-  "Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway",
-  "Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland",
-  "Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines",
-  "Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore",
-  "Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan",
-  "Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo",
-  "Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates",
-  "United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
+  "Andorra","Afghanistan","Aland Islands","Albania","Algeria","American Samoa","Angola","Anguilla","Antarctica","Antigua and Barbuda",
+  "Argentina","Armenia","Aruba","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados",
+  "Belarus","Belgium","Belize","Benin","Bermuda","Bhutan","Bolivia","Bonaire, Saint Eustatius and Saba","Bosnia and Herzegovina","Botswana",
+  "Bouvet Island","Brazil","British Indian Ocean Territory","Brunei Darussalam","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada",
+  "Canary Islands","Cape Verde","Cayman Islands","Central African Republic","Ceuta and Melilla","Chad","Chile","China","Christmas Island","Cocos (Keeling) Islands",
+  "Colombia","Comoros","Congo, Republic of","Congo, the Democratic Republic of","Cook Islands","Costa Rica","Cote d'Ivoire","Croatia/Hrvatska","Cuba","Curaçao",
+  "Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador",
+  "Equatorial Guinea","Eritrea","Estonia","Ethiopia","Falkland Islands","Faroe Islands","Fiji","Finland","France","French Guiana",
+  "French Polynesia","French Southern Territories","Gabon","Gambia","Georgia","Germany","Ghana","Gibraltar","Greece","Greenland",
+  "Grenada","Guadeloupe","Guam","Guatemala","Guernsey","Guinea","Guinea-Bissau","Guyana","Haiti","Heard and McDonald Islands",
+  "Holy See (City Vatican State)","Honduras","Hong Kong","Hungary","Iceland","India","Indonesia","Iran (Islamic Republic of)","Iraq","Ireland",
+  "Isle of Man","Israel","Italy","Jamaica","Japan","Jersey","Jordan","Kazakhstan","Kenya","Kiribati",
+  "Korea, Democratic People's Republic","Korea, Republic of","Kosovo","Kuwait","Kyrgyzstan","Lao People's Democratic Republic","Latvia","Lebanon","Lesotho","Liberia",
+  "Libya","Liechtenstein","Lithuania","Luxembourg","Macau","Macedonia","Madagascar","Malawi","Malaysia","Maldives",
+  "Mali","Malta","Marshall Islands","Martinique","Mauritania","Mauritius","Mayotte","Mexico","Micronesia, Federal State of","Moldova, Republic of",
+  "Monaco","Mongolia","Montenegro","Montserrat","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal",
+  "Netherlands","New Caledonia","New Zealand","Nicaragua","Niger","Nigeria","Niue","Norfolk Island","Northern Mariana Islands","Norway",
+  "Oman","Pakistan","Palau","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Pitcairn Island","Poland",
+  "Portugal","Puerto Rico","Qatar","Reunion Island","Romania","Russian Federation","Rwanda","Saint Barthélemy","Saint Helena","Saint Kitts and Nevis",
+  "Saint Lucia","Saint Martin","Saint Pierre and Miquelon","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia",
+  "Seychelles","Sierra Leone","Singapore","Sint Maarten","Slovak Republic","Slovenia","Solomon Islands","Somalia","South Africa","South Georgia",
+  "South Sudan","Spain","Sri Lanka","State of Palestine","Sudan","Suriname","Svalbard and Jan Mayen Islands","Swaziland","Sweden","Switzerland",
+  "Syrian Arab Republic","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tokelau","Tonga","Trinidad and Tobago","Tunisia",
+  "Turkey","Turkmenistan","Turks and Caicos Islands","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay",
+  "US Minor Outlying Islands","Uzbekistan","Vanuatu","Venezuela","Vietnam","Virgin Islands (British)","Virgin Islands (USA)","Wallis and Futuna","Western Sahara","Yemen",
+  "Zambia","Zimbabwe"
 ];
+
+// ===== STATE / PROVINCE PICKLISTS ===== (only US, Canada, Australia per spec workbook)
+const STATES = {
+  "United States": [
+    "Alaska","Alabama","Arkansas","American Samoa","Arizona","California",
+    "Colorado","Connecticut","District of Columbia","Delaware","Florida","Federated Micronesia",
+    "Georgia","Guam","Hawaii","Iowa","Idaho","Illinois",
+    "Indiana","Kansas","Kentucky","Louisiana","Massachusetts","Maryland",
+    "Maine","Marshall Islands","Michigan","Minnesota","Missouri","Northern Mariana Islands",
+    "Mississippi","Montana","North Carolina","North Dakota","Nebraska","New Hampshire",
+    "New Jersey","New Mexico","Nevada","New York","Ohio","Oklahoma",
+    "Oregon","Pennsylvania","Puerto Rico","Palau","Rhode Island","South Carolina",
+    "South Dakota","Tennessee","Texas","United States Minor Outlying Islands","Unknown","Utah",
+    "Virginia","US Virgin Islands","Vermont","Washington","Wisconsin","West Virginia",
+    "Wyoming"
+  ],
+  "Canada": [
+    "Alberta","British Columbia","Manitoba","New Brunswick","Newfoundland","Nova Scotia",
+    "Northwest Territories","Nunavut","Ontario","Prince Edward Island","Quebec","Saskatchewan",
+    "Unknown","Yukon"
+  ],
+  "Australia": [
+    "Australian Capital Territory","New South Wales","Northern Territory","Queensland","South Australia","Tasmania",
+    "Unknown","Victoria","Western Australia"
+  ]
+};
+
+// Populate the State dropdown for the given country, showing/hiding the group.
+// Returns true if the country has a state picklist (State then required).
+function populateStates(country) {
+  var group = document.getElementById('gate-state-group');
+  var sel = document.getElementById('gate-state');
+  if (!group || !sel) return false;
+  var list = STATES[country];
+  sel.innerHTML = '<option value="">Select state…</option>';
+  if (list) {
+    list.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      sel.appendChild(opt);
+    });
+    group.style.display = '';
+    return true;
+  }
+  group.style.display = 'none';
+  sel.value = '';
+  return false;
+}
+
 document.querySelectorAll('#gate-country').forEach(function(sel) {
   var prioritized = ["United States", "United Kingdom"];
   prioritized.forEach(function(c) {
@@ -1479,6 +1543,11 @@ document.querySelectorAll('#gate-country').forEach(function(sel) {
   });
 });
 
+// Show/populate the State dropdown whenever the country changes
+document.querySelectorAll('#gate-country').forEach(function(sel) {
+  sel.addEventListener('change', function() { populateStates(this.value); });
+});
+
 // Detect user's country from timezone and set as default
 (function detectCountry() {
   // Skip if already stored in sessionStorage
@@ -1493,13 +1562,13 @@ document.querySelectorAll('#gate-country').forEach(function(sel) {
     "Europe/Vienna":"Austria","Europe/Zurich":"Switzerland","Europe/Stockholm":"Sweden","Europe/Oslo":"Norway",
     "Europe/Copenhagen":"Denmark","Europe/Helsinki":"Finland","Europe/Warsaw":"Poland","Europe/Prague":"Czech Republic",
     "Europe/Budapest":"Hungary","Europe/Bucharest":"Romania","Europe/Sofia":"Bulgaria","Europe/Athens":"Greece",
-    "Europe/Istanbul":"Turkey","Europe/Moscow":"Russia","Europe/Kiev":"Ukraine","Europe/Lisbon":"Portugal",
-    "Europe/Dublin":"Ireland","Europe/Belgrade":"Serbia","Europe/Zagreb":"Croatia","Europe/Bratislava":"Slovakia",
+    "Europe/Istanbul":"Turkey","Europe/Moscow":"Russian Federation","Europe/Kiev":"Ukraine","Europe/Lisbon":"Portugal",
+    "Europe/Dublin":"Ireland","Europe/Belgrade":"Serbia","Europe/Zagreb":"Croatia/Hrvatska","Europe/Bratislava":"Slovak Republic",
     "Europe/Ljubljana":"Slovenia","Europe/Tallinn":"Estonia","Europe/Riga":"Latvia","Europe/Vilnius":"Lithuania",
-    "Europe/Minsk":"Belarus","Europe/Chisinau":"Moldova","Europe/Tirane":"Albania","Europe/Skopje":"North Macedonia",
+    "Europe/Minsk":"Belarus","Europe/Chisinau":"Moldova, Republic of","Europe/Tirane":"Albania","Europe/Skopje":"Macedonia",
     "Europe/Podgorica":"Montenegro","Europe/Sarajevo":"Bosnia and Herzegovina","Europe/Luxembourg":"Luxembourg",
     "Europe/Malta":"Malta","Europe/Monaco":"Monaco","Europe/Andorra":"Andorra","Europe/San_Marino":"San Marino",
-    "Europe/Vatican":"Vatican City","Asia/Tokyo":"Japan","Asia/Seoul":"South Korea","Asia/Shanghai":"China",
+    "Europe/Vatican":"Holy See (City Vatican State)","Asia/Tokyo":"Japan","Asia/Seoul":"Korea, Republic of","Asia/Shanghai":"China",
     "Asia/Hong_Kong":"China","Asia/Taipei":"Taiwan","Asia/Singapore":"Singapore","Asia/Kolkata":"India",
     "Asia/Calcutta":"India","Asia/Mumbai":"India","Asia/Karachi":"Pakistan","Asia/Dhaka":"Bangladesh",
     "Asia/Bangkok":"Thailand","Asia/Jakarta":"Indonesia","Asia/Manila":"Philippines","Asia/Kuala_Lumpur":"Malaysia",
@@ -1508,9 +1577,9 @@ document.querySelectorAll('#gate-country').forEach(function(sel) {
     "Asia/Dushanbe":"Tajikistan","Asia/Ashgabat":"Turkmenistan","Asia/Baku":"Azerbaijan","Asia/Tbilisi":"Georgia",
     "Asia/Yerevan":"Armenia","Asia/Dubai":"United Arab Emirates","Asia/Muscat":"Oman","Asia/Qatar":"Qatar",
     "Asia/Bahrain":"Bahrain","Asia/Kuwait":"Kuwait","Asia/Riyadh":"Saudi Arabia","Asia/Baghdad":"Iraq",
-    "Asia/Tehran":"Iran","Asia/Kabul":"Afghanistan","Asia/Jerusalem":"Israel","Asia/Amman":"Jordan",
-    "Asia/Beirut":"Lebanon","Asia/Damascus":"Syria","Asia/Phnom_Penh":"Cambodia","Asia/Vientiane":"Laos",
-    "Asia/Ulaanbaatar":"Mongolia","Asia/Brunei":"Brunei","Asia/Pyongyang":"North Korea",
+    "Asia/Tehran":"Iran (Islamic Republic of)","Asia/Kabul":"Afghanistan","Asia/Jerusalem":"Israel","Asia/Amman":"Jordan",
+    "Asia/Beirut":"Lebanon","Asia/Damascus":"Syrian Arab Republic","Asia/Phnom_Penh":"Cambodia","Asia/Vientiane":"Lao People's Democratic Republic",
+    "Asia/Ulaanbaatar":"Mongolia","Asia/Brunei":"Brunei Darussalam","Asia/Pyongyang":"Korea, Democratic People's Republic",
     "Australia/Sydney":"Australia","Australia/Melbourne":"Australia","Australia/Brisbane":"Australia",
     "Australia/Perth":"Australia","Australia/Adelaide":"Australia","Australia/Hobart":"Australia",
     "Australia/Darwin":"Australia","Pacific/Auckland":"New Zealand","Pacific/Fiji":"Fiji",
@@ -1519,8 +1588,8 @@ document.querySelectorAll('#gate-country').forEach(function(sel) {
     "Africa/Accra":"Ghana","Africa/Addis_Ababa":"Ethiopia","Africa/Dar_es_Salaam":"Tanzania",
     "Africa/Kampala":"Uganda","Africa/Khartoum":"Sudan","Africa/Tripoli":"Libya","Africa/Maputo":"Mozambique",
     "Africa/Lusaka":"Zambia","Africa/Harare":"Zimbabwe","Africa/Windhoek":"Namibia","Africa/Gaborone":"Botswana",
-    "Africa/Dakar":"Senegal","Africa/Abidjan":"Ivory Coast","Africa/Bamako":"Mali","Africa/Ouagadougou":"Burkina Faso",
-    "Africa/Kinshasa":"Congo (DRC)","Africa/Brazzaville":"Congo (Republic)","Africa/Douala":"Cameroon",
+    "Africa/Dakar":"Senegal","Africa/Abidjan":"Cote d'Ivoire","Africa/Bamako":"Mali","Africa/Ouagadougou":"Burkina Faso",
+    "Africa/Kinshasa":"Congo, the Democratic Republic of","Africa/Brazzaville":"Congo, Republic of","Africa/Douala":"Cameroon",
     "Africa/Libreville":"Gabon","Africa/Luanda":"Angola",
     "America/Toronto":"Canada","America/Vancouver":"Canada","America/Edmonton":"Canada","America/Winnipeg":"Canada",
     "America/Halifax":"Canada","America/Montreal":"Canada","America/Mexico_City":"Mexico","America/Cancun":"Mexico",
@@ -1540,6 +1609,7 @@ document.querySelectorAll('#gate-country').forEach(function(sel) {
       document.querySelectorAll('#gate-country').forEach(function(sel) {
         sel.value = detected;
       });
+      populateStates(detected);
       console.info('[Country] Auto-detected:', detected, '(from timezone:', tz + ')');
     }
   } catch(e) {
@@ -2851,10 +2921,15 @@ function hasRequiredUserInfo() {
 }
 
 function loadUserInfoFromStorage() {
-  document.getElementById('gate-name').value = sessionStorage.getItem('ha_name') || '';
+  document.getElementById('gate-firstname').value = sessionStorage.getItem('ha_firstname') || '';
+  document.getElementById('gate-lastname').value = sessionStorage.getItem('ha_lastname') || '';
   document.getElementById('gate-email').value = sessionStorage.getItem('ha_email') || '';
   document.getElementById('gate-company').value = sessionStorage.getItem('ha_company') || '';
-  document.getElementById('gate-country').value = sessionStorage.getItem('ha_country') || '';
+  var country = sessionStorage.getItem('ha_country') || '';
+  document.getElementById('gate-country').value = country;
+  // Rebuild the State options for the restored country before setting its value
+  populateStates(country);
+  document.getElementById('gate-state').value = sessionStorage.getItem('ha_state') || '';
   document.getElementById('gate-consent').checked = sessionStorage.getItem('ha_consent') === 'true';
 }
 
@@ -2863,15 +2938,23 @@ function isValidEmail(email) {
 }
 
 function submitUserInfo() {
-  const name = document.getElementById('gate-name').value.trim();
+  const firstName = document.getElementById('gate-firstname').value.trim();
+  const lastName = document.getElementById('gate-lastname').value.trim();
   const email = document.getElementById('gate-email').value.trim();
   const company = document.getElementById('gate-company').value.trim();
   const country = document.getElementById('gate-country').value;
+  const state = document.getElementById('gate-state').value;
   const consent = document.getElementById('gate-consent').checked;
   const errEl = document.getElementById('gate-error');
+  const stateRequired = !!STATES[country];
 
-  if (!name || !email || !country) {
-    errEl.textContent = 'Name, work email, and country are required.';
+  if (!firstName || !lastName || !email || !company || !country) {
+    errEl.textContent = 'First name, last name, work email, company, and country are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (stateRequired && !state) {
+    errEl.textContent = 'Please select your state.';
     errEl.style.display = 'block';
     return;
   }
@@ -2882,17 +2965,19 @@ function submitUserInfo() {
   }
 
   errEl.style.display = 'none';
-  rumEvent('assessment_started', { company, country, consent });
+  rumEvent('assessment_started', { company, country, state, consent });
 
   // Save to sessionStorage (never written to the URL)
-  sessionStorage.setItem('ha_name', name);
+  sessionStorage.setItem('ha_firstname', firstName);
+  sessionStorage.setItem('ha_lastname', lastName);
   sessionStorage.setItem('ha_email', email);
   sessionStorage.setItem('ha_company', company);
   sessionStorage.setItem('ha_country', country);
+  sessionStorage.setItem('ha_state', state);
   sessionStorage.setItem('ha_consent', consent ? 'true' : 'false');
 
   // Submit initial lead capture to Marketo (no results yet)
-  submitToMarketo({ name: name, email: email, company: company, country: country, consent: consent, includeResults: false });
+  submitToMarketo({ firstName: firstName, lastName: lastName, email: email, company: company, country: country, state: state, consent: consent, includeResults: false });
 
   // Close modal and show assessment
   document.getElementById('user-info-modal').classList.remove('open');
@@ -2914,7 +2999,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   // capture window.location. These params should no longer be present but clean up
   // any legacy links that may still carry them.
   (function stripPiiFromUrl() {
-    const piiParams = ['name', 'email', 'company', 'country'];
+    const piiParams = ['name', 'firstname', 'lastname', 'email', 'company', 'country', 'state'];
     const url = new URL(window.location);
     let changed = false;
     piiParams.forEach(function(p) {
@@ -2962,14 +3047,6 @@ function initMarketoForm() {
   });
 }
 
-// Split "Full Name" into firstName / lastName
-function splitName(fullName) {
-  const parts = (fullName || '').trim().split(/\s+/);
-  if (parts.length === 0) return { firstName: '', lastName: '' };
-  if (parts.length === 1) return { firstName: parts[0], lastName: '' };
-  return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
-}
-
 // Build the assessment results payload for formCustomE
 function buildAssessmentPayload() {
   var score = computeScore();
@@ -3007,20 +3084,22 @@ function submitToMarketo(opts) {
     return;
   }
 
-  var name = opts.name || sessionStorage.getItem('ha_name') || '';
+  var firstName = opts.firstName || sessionStorage.getItem('ha_firstname') || '';
+  var lastName = opts.lastName || sessionStorage.getItem('ha_lastname') || '';
   var email = opts.email || sessionStorage.getItem('ha_email') || '';
   var company = opts.company || sessionStorage.getItem('ha_company') || '';
   var country = opts.country || sessionStorage.getItem('ha_country') || '';
+  var state = opts.state || sessionStorage.getItem('ha_state') || '';
   var consent = (typeof opts.consent === 'boolean') ? opts.consent : (sessionStorage.getItem('ha_consent') === 'true');
-  var nameParts = splitName(name);
 
   var payload = {
-    FirstName: nameParts.firstName,
-    LastName: nameParts.lastName,
+    FirstName: firstName,
+    LastName: lastName,
     Email: email,
     Company: company,
     Country: country,
-    MarketingOptIn: consent,
+    State: state,
+    consenttoprocessing: consent,
     utm_medium: 'assessment',
     utm_source: 'exec-maturity-assessment',
     utm_campaign: '2026-exec-maturity-assessment',

@@ -3008,6 +3008,17 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     if (changed) history.replaceState({}, '', url);
   })();
 
+  // Capture UTM params from the URL once, persisting them so they survive the
+  // gate flow and both Marketo submissions (lead-capture + results).
+  (function captureUtmFromUrl() {
+    const utmParams = ['utm_campaign', 'utm_content', 'utm_medium', 'utm_source', 'utm_term'];
+    const params = new URLSearchParams(window.location.search);
+    utmParams.forEach(function(p) {
+      const v = params.get(p);
+      if (v) sessionStorage.setItem('ha_' + p, v);
+    });
+  })();
+
   if (hasRequiredUserInfo()) {
     document.querySelector('.container').style.display = '';
   } else {
@@ -3074,6 +3085,13 @@ function buildAssessmentPayload() {
   });
 }
 
+// Return the UTM value captured from the URL, falling back to the default when
+// no value arrived via the query string.
+function utmOrDefault(name, defaultVal) {
+  var stored = sessionStorage.getItem('ha_' + name);
+  return stored ? stored : defaultVal;
+}
+
 // Submit lead data to Marketo
 function submitToMarketo(opts) {
   opts = opts || {};
@@ -3100,11 +3118,11 @@ function submitToMarketo(opts) {
     Country: country,
     State: state,
     consenttoprocessing: consent,
-    utm_medium: 'assessment',
-    utm_source: 'exec-maturity-assessment',
-    utm_campaign: '2026-exec-maturity-assessment',
-    utm_content: opts.includeResults ? 'with-results' : 'lead-capture-only',
-    utm_term: opts.includeResults ? getStage(computeScore(), getCriticalFlags()).stage : 'pre-assessment',
+    utm_medium: utmOrDefault('utm_medium', 'assessment'),
+    utm_source: utmOrDefault('utm_source', 'exec-maturity-assessment'),
+    utm_campaign: utmOrDefault('utm_campaign', '2026-exec-maturity-assessment'),
+    utm_content: utmOrDefault('utm_content', opts.includeResults ? 'with-results' : 'lead-capture-only'),
+    utm_term: utmOrDefault('utm_term', opts.includeResults ? getStage(computeScore(), getCriticalFlags()).stage : 'pre-assessment'),
     utm_ad_group: opts.includeResults ? computeDomains().map(function(d) { return d.label; }).join(';') : 'pre-assessment'
   };
 

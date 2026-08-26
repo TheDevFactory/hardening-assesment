@@ -1246,7 +1246,7 @@ function OptanonWrapper() { }
   <div class="header">
     <div class="header-badge">Executive Maturity Assessment</div>
     <h1>Executive Risk &amp; Compliance<br><span>Maturity Assessment</span></h1>
-    <p class="header-sub">Advisory assessment for Director and above leaders responsible for compliance, security, operational resilience, and AI governance. Evaluate whether your organisation can continuously detect drift, produce defensible audit evidence, govern AI-driven change, and maintain confidence across hybrid environments.</p>
+    <p class="header-sub">Advisory assessment for Director and above leaders responsible for compliance, security, operational resilience, and AI governance. Evaluate whether your organization can continuously detect drift, produce defensible audit evidence, govern AI-driven change, and maintain confidence across hybrid environments.</p>
     <div class="header-meta">
       <span class="header-meta-item">⏱ <strong>5–7 min</strong> · 15 questions across 5 domains</span>
       <span class="header-meta-item">📋 Scored out of 30 · Stage-based insight</span>
@@ -1659,7 +1659,7 @@ const questions = [
   {
     id: 'drift_detect',
     domain: 'drift',
-    text: 'How quickly are unauthorised or unintended configuration changes detected?',
+    text: 'How quickly are unauthorized or unintended configuration changes detected?',
     hint: 'Think about the average detection window for an unexpected change.',
     options: [
       'Within minutes, automatically',
@@ -1799,7 +1799,7 @@ const questions = [
   {
     id: 'op_audit_effort',
     domain: 'operational',
-    text: 'How much organisational effort is spent preparing for audits versus maintaining continuous compliance?',
+    text: 'How much organizational effort is spent preparing for audits versus maintaining continuous compliance?',
     hint: 'Continuous compliance turns evidence into a byproduct of operations.',
     options: [
       'Continuous compliance, light audit prep',
@@ -1810,12 +1810,12 @@ const questions = [
   {
     id: 'op_confidence',
     domain: 'operational',
-    text: 'Do leaders trust the current compliance posture enough to accelerate change, modernisation, and AI adoption?',
+    text: 'Do leaders trust the current compliance posture enough to accelerate change, modernization, and AI adoption?',
     hint: 'This is about leadership confidence, not technical capability alone.',
     options: [
       'Yes, posture supports acceleration',
       'Cautious — gaps create hesitation',
-      'No, posture blocks modernisation'
+      'No, posture blocks modernization'
     ]
   }
 ];
@@ -2007,11 +2007,11 @@ const STAGE_INTERPRETATION = {
   'Optimized':
     'You are operating with a strong continuous compliance foundation. Controls are likely enforced consistently, evidence is easier to produce, and leadership can move faster with greater confidence. Your bigger opportunity is not basic control maturity — it is extending governance into AI-led workflows, reducing residual fragmentation, and using compliance intelligence as a strategic advantage.',
   'Advancing':
-    'You have meaningful automation and some audit confidence, but there are still visible gaps in coverage, evidence consistency, traceability, or cross-domain coordination. This is the zone where organisations often look mature on paper but still struggle when auditors ask for proof or when AI-driven change introduces exceptions faster than teams can govern them.',
+    'You have meaningful automation and some audit confidence, but there are still visible gaps in coverage, evidence consistency, traceability, or cross-domain coordination. This is the zone where organizations often look mature on paper but still struggle when auditors ask for proof or when AI-driven change introduces exceptions faster than teams can govern them.',
   'Reactive':
-    'Compliance depends too heavily on manual work, inconsistent enforcement, or fragmented tools. The organisation is likely still proving compliance after the fact rather than maintaining it continuously. Audit burden, drift remediation delays, and gaps between policy and reality can materially increase risk and reduce confidence in modernisation efforts.',
+    'Compliance depends too heavily on manual work, inconsistent enforcement, or fragmented tools. The organization is likely still proving compliance after the fact rather than maintaining it continuously. Audit burden, drift remediation delays, and gaps between policy and reality can materially increase risk and reduce confidence in modernization efforts.',
   'At Risk':
-    'The organisation is operating with significant exposure. Controls are difficult to verify, evidence is largely manual, and governance does not scale with hybrid complexity or AI. This posture limits the ability to move quickly, increases the probability of findings or incidents, and leaves executives without defensible answers to board-level or regulatory questions.'
+    'The organization is operating with significant exposure. Controls are difficult to verify, evidence is largely manual, and governance does not scale with hybrid complexity or AI. This posture limits the ability to move quickly, increases the probability of findings or incidents, and leaves executives without defensible answers to board-level or regulatory questions.'
 };
 
 // Short "summary insight" pulled from the doc's Key Maturity Insights section.
@@ -2021,9 +2021,9 @@ const STAGE_SUMMARY_INSIGHT = {
   'Reactive':
     'Leaders at this stage often have isolated automation but still rely too heavily on manual effort, disconnected workflows, or periodic validation. The key issue is not absence of activity — it is inconsistency. Executive priority should be reducing repeat audit pain, tightening drift remediation, and eliminating fragmentation that obscures real exposure.',
   'Advancing':
-    'Leaders at this stage have meaningful progress but still face gaps in proof, coverage, or traceability. This is where organisations can appear mature until an audit, board request, or AI exception exposes weak evidentiary chains. Executive priority should be to turn partial control into continuous confidence.',
+    'Leaders at this stage have meaningful progress but still face gaps in proof, coverage, or traceability. This is where organizations can appear mature until an audit, board request, or AI exception exposes weak evidentiary chains. Executive priority should be to turn partial control into continuous confidence.',
   'Optimized':
-    'Leaders at this stage have a strong operational base and should shift from basic control improvement to strategic advantage. The next step is to use continuous governance and evidence to reduce regulatory friction, scale AI safely, and accelerate modernisation without sacrificing defensibility.'
+    'Leaders at this stage have a strong operational base and should shift from basic control improvement to strategic advantage. The next step is to use continuous governance and evidence to reduce regulatory friction, scale AI safely, and accelerate modernization without sacrificing defensibility.'
 };
 
 // Detailed recommendation paragraph keyed to maturity stage.
@@ -2031,11 +2031,11 @@ const STAGE_DETAIL = {
   'At Risk':
     'Focus first on stabilising the control environment and creating visibility where little exists today. Start by identifying the systems and workflows carrying the highest regulatory, operational, or customer risk. Establish baseline policy enforcement, automate validation where possible, and remove dependence on manual evidence collection. If AI-driven workflows are active, limit them to governed use cases until actions can be traced and controls can be proven. The objective at this stage is to create a defensible minimum viable compliance posture that reduces immediate exposure and gives leaders clearer visibility into where risk actually sits.',
   'Reactive':
-    'Your organisation has likely made isolated progress, but key controls still depend on people, point tools, or periodic checks. Prioritise eliminating the failure points that create repeat audit pain and operational surprises. Move drift detection and remediation closer to continuous operation, standardise policy coverage across more of the hybrid estate, and reduce manual coordination between platform, audit, and security teams. For AI, introduce explicit policy and approval controls before usage expands. The goal is to move from fragmented compliance activity to a repeatable, evidence-producing operating model.',
+    'Your organization has likely made isolated progress, but key controls still depend on people, point tools, or periodic checks. Prioritize eliminating the failure points that create repeat audit pain and operational surprises. Move drift detection and remediation closer to continuous operation, standardize policy coverage across more of the hybrid estate, and reduce manual coordination between platform, audit, and security teams. For AI, introduce explicit policy and approval controls before usage expands. The goal is to move from fragmented compliance activity to a repeatable, evidence-producing operating model.',
   'Advancing':
     'You are close to a stronger strategic posture, but likely still exposed where visibility, traceability, or domain consistency are uneven. This is the right stage to close the gap between having automation and being able to prove its effectiveness continuously. Tighten evidentiary chains, improve hybrid coverage, reduce exceptions, and make sure AI-driven activity is governed by the same policy framework as human-led change. The objective is to turn partial confidence into full executive confidence by removing the remaining points of manual effort and weak traceability.',
   'Optimized':
-    'Your foundation is strong enough to shift the conversation from control adequacy to strategic advantage. Expand the governance model across infrastructure, data, code, and AI-enabled workflows so leadership can answer board and regulator questions quickly and confidently. Use trend data around drift, remediation, control failures, and exceptions to identify where risk is emerging before it becomes visible in incidents or audits. The opportunity here is to treat continuous compliance and evidence as a way to accelerate modernisation and AI adoption with lower risk — not just as a control function.'
+    'Your foundation is strong enough to shift the conversation from control adequacy to strategic advantage. Expand the governance model across infrastructure, data, code, and AI-enabled workflows so leadership can answer board and regulator questions quickly and confidently. Use trend data around drift, remediation, control failures, and exceptions to identify where risk is emerging before it becomes visible in incidents or audits. The opportunity here is to treat continuous compliance and evidence as a way to accelerate modernization and AI adoption with lower risk — not just as a control function.'
 };
 
 // ===== PERSONA ADVISORY (from the source document) =====
@@ -2046,15 +2046,15 @@ const PERSONA_ADVISORY = {
   },
   grc: {
     title: 'For the CRO, Head of Risk, or GRC Leadership',
-    body: 'For risk and GRC leaders, low or uneven maturity usually translates into higher audit cost, slower regulatory response, and difficulty proving that risk controls are actually operating as intended. A weak score in evidence, fragmentation, or operational readiness means the organisation is likely spending too much time gathering proof and not enough time reducing actual exposure. The right move is to tighten the chain from policy to enforcement to evidence so compliance is verified continuously rather than reported periodically. The business outcome is less audit friction, lower cost of compliance, stronger defensibility with regulators and boards, and a clearer view of where residual risk remains.'
+    body: 'For risk and GRC leaders, low or uneven maturity usually translates into higher audit cost, slower regulatory response, and difficulty proving that risk controls are actually operating as intended. A weak score in evidence, fragmentation, or operational readiness means the organization is likely spending too much time gathering proof and not enough time reducing actual exposure. The right move is to tighten the chain from policy to enforcement to evidence so compliance is verified continuously rather than reported periodically. The business outcome is less audit friction, lower cost of compliance, stronger defensibility with regulators and boards, and a clearer view of where residual risk remains.'
   },
   platform: {
     title: 'For the CIO, CTO, Platform, or Infrastructure Leadership',
-    body: 'For technology and platform leaders, a low score usually points to too much manual work, inconsistent control across environments, and a change model that does not scale well under hybrid complexity or AI acceleration. Weakness in drift remediation, hybrid coverage, or operational readiness indicates that teams are spending too much time fixing preventable issues and preparing for audits instead of improving service reliability and delivery speed. The right response is to standardise policy intent, automate remediation where possible, and make compliance evidence a byproduct of operational work. The business outcome is lower incident rates, less operational drag, improved uptime, and greater confidence to modernise without creating unmanaged risk.'
+    body: 'For technology and platform leaders, a low score usually points to too much manual work, inconsistent control across environments, and a change model that does not scale well under hybrid complexity or AI acceleration. Weakness in drift remediation, hybrid coverage, or operational readiness indicates that teams are spending too much time fixing preventable issues and preparing for audits instead of improving service reliability and delivery speed. The right response is to standardize policy intent, automate remediation where possible, and make compliance evidence a byproduct of operational work. The business outcome is lower incident rates, less operational drag, improved uptime, and greater confidence to modernize without creating unmanaged risk.'
   },
   other: {
     title: 'Executive Advisory',
-    body: 'The most resilient organisations treat compliance as a continuous operating capability rather than a periodic reporting exercise. Aligning policy, enforcement, and evidence in real time reduces audit friction, narrows the window in which drift or unmanaged AI change can create exposure, and gives leadership defensible answers to board, customer, and regulator questions. Use the domain scores below to focus first on the areas with the weakest current evidence of control.'
+    body: 'The most resilient organizations treat compliance as a continuous operating capability rather than a periodic reporting exercise. Aligning policy, enforcement, and evidence in real time reduces audit friction, narrows the window in which drift or unmanaged AI change can create exposure, and gives leadership defensible answers to board, customer, and regulator questions. Use the domain scores below to focus first on the areas with the weakest current evidence of control.'
   }
 };
 
@@ -2072,21 +2072,21 @@ const ANSWER_TRIGGERED_RULES = [
     domainId: 'evidence',
     qIds: ['audit_evidence','audit_currency'], // Q4–Q5 per the doc
     headline: 'Your audit model is too dependent on manual evidence collection or stale reporting.',
-    action: 'Prioritise continuous evidence generation tied directly to enforcement actions and change events.',
+    action: 'Prioritize continuous evidence generation tied directly to enforcement actions and change events.',
     outcome: 'Lower audit preparation cost, faster response to audit requests, stronger regulator and board confidence.'
   },
   {
     domainId: 'hybrid',
     qIds: ['hybrid_consistency','hybrid_constrained','hybrid_fragmentation'],
     headline: 'Compliance is fragmented across environments or control models.',
-    action: 'Standardise policy intent across cloud, on-prem, edge, and constrained systems while reducing exceptions and disconnected workflows.',
+    action: 'Standardize policy intent across cloud, on-prem, edge, and constrained systems while reducing exceptions and disconnected workflows.',
     outcome: 'Fewer blind spots, more complete audit posture, simpler governance across complex estates.'
   },
   {
     domainId: 'ai',
     qIds: ['ai_policy','ai_trace','ai_governed'],
     headline: 'AI is increasing risk faster than governance is adapting.',
-    action: 'Apply enforceable policy, traceability, and approval controls to AI-driven actions with the same rigour expected of human-driven changes.',
+    action: 'Apply enforceable policy, traceability, and approval controls to AI-driven actions with the same rigor expected of human-driven changes.',
     outcome: 'Safer AI adoption, clearer accountability, reduced compliance and operational risk.'
   },
   {
@@ -2094,7 +2094,7 @@ const ANSWER_TRIGGERED_RULES = [
     qIds: ['op_drift_incidents','op_audit_effort','op_confidence'],
     headline: 'Compliance is still functioning as a reactive support burden rather than a confidence-enabling operating model.',
     action: 'Shift from audit preparation and manual fixes toward continuous visibility, policy enforcement, and evidence as a byproduct.',
-    outcome: 'Faster change velocity, lower operational drag, stronger confidence to modernise.'
+    outcome: 'Faster change velocity, lower operational drag, stronger confidence to modernize.'
   }
 ];
 
@@ -2111,7 +2111,7 @@ function getAnswerTriggeredRecs() {
 const STATIC_RISK_INSIGHTS = [
   {
     title: 'Audit risk is no longer about policy alone',
-    body: 'Most organisations can define policy. Fewer can prove it is enforced continuously. Audit exposure rises when evidence must be reconstructed manually or after the fact.'
+    body: 'Most organizations can define policy. Fewer can prove it is enforced continuously. Audit exposure rises when evidence must be reconstructed manually or after the fact.'
   },
   {
     title: 'Configuration drift creates silent non-compliance',
@@ -2119,7 +2119,7 @@ const STATIC_RISK_INSIGHTS = [
   },
   {
     title: 'AI amplifies both speed and risk',
-    body: 'AI accelerates change across infrastructure and workflows. If guardrails are advisory rather than enforceable, organisations can enter non-compliant states faster than teams can detect or explain them.'
+    body: 'AI accelerates change across infrastructure and workflows. If guardrails are advisory rather than enforceable, organizations can enter non-compliant states faster than teams can detect or explain them.'
   },
   {
     title: 'Fragmentation is a hidden risk multiplier',
@@ -2135,7 +2135,7 @@ const WHAT_GOOD_LOOKS_LIKE =
   'Continuous compliance means systems are validated and remediated automatically, evidence is generated as a byproduct of operations, AI-driven activity is governed and traceable, and leadership has current visibility into control effectiveness, exceptions, and residual risk.';
 
 const CTA_COPY =
-  'Benchmark your environment and validate whether your compliance posture is strong enough to support modernisation and AI-driven change without increasing audit or operational risk.';
+  'Benchmark your environment and validate whether your compliance posture is strong enough to support modernization and AI-driven change without increasing audit or operational risk.';
 
 // ===== EXECUTIVE SUMMARY TEMPLATE =====
 // Composes a 2–3 sentence executive summary modelled on the doc's templates,
@@ -2173,18 +2173,18 @@ function buildExecSummary(stage, personaKey, weakest) {
     'Reactive':
       'For ' + personaCtx + ', the primary opportunity is to move from reporting risk after the fact to verifying enforcement continuously — especially in ' + (weakestPhrase || 'the weakest domains') + '.',
     'At Risk':
-      'For ' + personaCtx + ', the immediate priority is to establish continuous validation, automate baseline remediation, and standardise controls across ' + (weakestPhrase || 'the hybrid estate') + '.'
+      'For ' + personaCtx + ', the immediate priority is to establish continuous validation, automate baseline remediation, and standardize controls across ' + (weakestPhrase || 'the hybrid estate') + '.'
   };
 
   var outcomeByStage = {
     'Optimized':
-      'This will reinforce defensibility, reduce regulatory friction, and accelerate modernisation with lower risk.',
+      'This will reinforce defensibility, reduce regulatory friction, and accelerate modernization with lower risk.',
     'Advancing':
       'Closing those gaps will improve audit defensibility, reduce exposure to misconfiguration risk, and give leadership greater confidence in scaling AI-enabled operations.',
     'Reactive':
       'Doing so will shorten audit cycles, reduce compliance overhead, and create a more defensible answer to regulator and board-level questions.',
     'At Risk':
-      'This will reduce incident risk, improve operational consistency, and make future modernisation efforts more sustainable.'
+      'This will reduce incident risk, improve operational consistency, and make future modernization efforts more sustainable.'
   };
 
   return [openings[stage], actionByStage[stage], outcomeByStage[stage]].filter(Boolean).join(' ');

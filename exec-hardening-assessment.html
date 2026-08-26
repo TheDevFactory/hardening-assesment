@@ -665,8 +665,10 @@ function OptanonWrapper() { }
     position: fixed; inset: 0;
     background: rgba(0, 0, 0, 0.45);
     z-index: 100;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    overflow-y: auto;
+    padding: 40px 16px;
     backdrop-filter: blur(4px);
   }
 
@@ -676,37 +678,39 @@ function OptanonWrapper() { }
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 36px;
+    padding: 28px 32px;
     max-width: 440px;
     width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
     animation: scaleIn 0.25s ease;
     box-shadow: 0 20px 60px rgba(0,0,0,0.15);
   }
 
   .modal h3 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     color: #222222;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .modal p {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--muted);
-    margin-bottom: 22px;
-    line-height: 1.6;
+    margin-bottom: 16px;
+    line-height: 1.5;
   }
 
-  .input-group { margin-bottom: 16px; }
+  .input-group { margin-bottom: 12px; }
 
   .input-label {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--label);
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    margin-bottom: 7px;
+    margin-bottom: 5px;
   }
 
   input[type="text"], input[type="email"], select {
@@ -714,10 +718,10 @@ function OptanonWrapper() { }
     background: #f7f8fa;
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 11px 14px;
+    padding: 9px 12px;
     color: var(--text);
     font-family: 'Open Sans', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     outline: none;
     transition: border-color 0.2s;
     -webkit-appearance: none;
@@ -742,14 +746,14 @@ function OptanonWrapper() { }
   .modal-actions {
     display: flex;
     gap: 10px;
-    margin-top: 24px;
+    margin-top: 18px;
     flex-wrap: wrap;
   }
 
   /* Marketing-consent checkbox + privacy notice inside the gate modal. */
   .consent-group {
-    margin: 4px 0;
-    padding-top: 4px;
+    margin: 2px 0;
+    padding-top: 2px;
   }
 
   .consent-row {
@@ -770,15 +774,15 @@ function OptanonWrapper() { }
   }
 
   .consent-label {
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.4;
     color: var(--label);
   }
 
   .privacy-notice {
-    margin-top: 10px;
-    font-size: 12px;
-    line-height: 1.5;
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.4;
     color: var(--muted);
   }
 
@@ -835,6 +839,11 @@ function OptanonWrapper() { }
     .indicators-row { grid-template-columns: 1fr; }
     .card { padding: 24px 20px; }
     .cta-box { padding: 20px; }
+
+    .modal-overlay { padding: 16px; }
+    .modal { padding: 20px 18px; max-height: 90vh; }
+    .modal-actions { flex-direction: column; }
+    .modal-actions .btn { width: 100%; justify-content: center; }
   }
 
   .hidden { display: none !important; }
@@ -2981,6 +2990,7 @@ function submitUserInfo() {
 
   // Close modal and show assessment
   document.getElementById('user-info-modal').classList.remove('open');
+  document.body.style.overflow = '';
   document.querySelector('.container').style.display = '';
 }
 
@@ -3026,6 +3036,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     document.querySelector('.container').style.display = 'none';
     loadUserInfoFromStorage();
     document.getElementById('user-info-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
   renderQuestion(0);
 })();
